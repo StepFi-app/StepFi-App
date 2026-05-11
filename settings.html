@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-container": "#ff8b7c",
+                "on-error": "#690005",
+                "tertiary-fixed": "#ffdad5",
+                "surface-tint": "#4ae176",
+                "primary-container": "#22c55e",
+                "outline-variant": "#3d4a3d",
+                "inverse-primary": "#006e2f",
+                "surface": "#0e150e",
+                "on-primary-fixed-variant": "#005321",
+                "primary-fixed-dim": "#4ae176",
+                "background": "#0e150e",
+                "surface-variant": "#2f372e",
+                "primary-fixed": "#6bff8f",
+                "surface-bright": "#333b33",
+                "inverse-surface": "#dce5d9",
+                "secondary-fixed-dim": "#b4c5ff",
+                "on-background": "#dce5d9",
+                "on-primary-container": "#004b1e",
+                "on-tertiary-container": "#76231b",
+                "on-secondary": "#002a78",
+                "error-container": "#93000a",
+                "on-primary": "#003915",
+                "surface-container-highest": "#2f372e",
+                "surface-container-lowest": "#091009",
+                "on-tertiary": "#60130d",
+                "secondary-container": "#0053db",
+                "on-tertiary-fixed": "#410001",
+                "inverse-on-surface": "#2a322a",
+                "on-surface-variant": "#bccbb9",
+                "on-error-container": "#ffdad6",
+                "on-secondary-fixed-variant": "#003ea8",
+                "surface-container": "#1a221a",
+                "surface-container-low": "#161d16",
+                "surface-dim": "#0e150e",
+                "on-surface": "#dce5d9",
+                "error": "#ffb4ab",
+                "on-secondary-container": "#cdd7ff",
+                "surface-container-high": "#242c24",
+                "on-secondary-fixed": "#00174b",
+                "tertiary-fixed-dim": "#ffb4a9",
+                "on-tertiary-fixed-variant": "#7f2a21",
+                "tertiary": "#ffb5ab",
+                "outline": "#869585",
+                "secondary": "#b4c5ff",
+                "primary": "#4be277",
+                "on-primary-fixed": "#002109",
+                "secondary-fixed": "#dbe1ff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "gutter": "16px",
+                "unit": "4px",
+                "section-gap": "24px",
+                "container-padding": "16px",
+                "stack-gap": "12px"
+        },
+        "fontFamily": {
+                "label-md": [
+                        "Manrope"
+                ],
+                "headline-lg": [
+                        "Manrope"
+                ],
+                "body-lg": [
+                        "Manrope"
+                ],
+                "body-md": [
+                        "Manrope"
+                ],
+                "headline-md": [
+                        "Manrope"
+                ],
+                "display-xl": [
+                        "Manrope"
+                ],
+                "body-sm": [
+                        "Manrope"
+                ]
+        },
+        "fontSize": {
+                "label-md": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "display-xl": [
+                        "40px",
+                        {
+                                "lineHeight": "48px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+  body {
+    background-color: #080F1A;
+    color: #F0F4F8;
+  }
+  .card-surface {
+    background-color: #0D1B2A;
+    border: 1px solid #1E3A52;
+  }
+  .input-surface {
+    background-color: #1A2E45;
+    border: 1px solid #1E3A52;
+  }
+</style>
+</head>
+<body class="min-h-screen bg-[#080F1A] pb-24 text-[#F0F4F8] font-body-md">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#080F1A] border-b border-[#1E3A52] flex justify-between items-center px-container-padding h-16 transition-colors duration-200">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full bg-[#132238] flex items-center justify-center border border-[#1E3A52]">
+<span class="material-symbols-outlined text-[#F0F4F8] text-sm">person</span>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-[#F0F4F8]">Settings</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#132238] transition-colors duration-200">
+<span class="material-symbols-outlined text-[#F0F4F8]" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 px-container-padding max-w-2xl mx-auto flex flex-col gap-section-gap">
+<!-- Profile Card -->
+<section class="card-surface rounded-xl p-4 flex flex-col gap-stack-gap">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 rounded-full bg-[#132238] border border-[#1E3A52] flex items-center justify-center">
+<span class="font-headline-md text-headline-md text-[#22C55E]">JD</span>
+</div>
+<div class="flex-1">
+<h2 class="font-body-lg text-body-lg text-[#F0F4F8] font-semibold">John Doe</h2>
+<div class="flex items-center gap-2 mt-1">
+<p class="font-body-sm text-body-sm text-[#869585]">0x71C...4f3b</p>
+<button class="text-[#869585] hover:text-[#2563EB] transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="content_copy">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+<button class="w-full mt-2 py-2 px-4 rounded-xl border border-[#1E3A52] text-[#F0F4F8] font-label-md text-label-md hover:bg-[#132238] transition-colors">
+        Edit Profile
+      </button>
+</section>
+<!-- Learner Profile Card -->
+<section class="card-surface rounded-xl p-4 flex flex-col gap-stack-gap relative overflow-hidden">
+<img alt="" class="absolute top-0 right-0 w-32 h-32 opacity-20 object-cover -mr-4 -mt-4 pointer-events-none" src="https://lh3.googleusercontent.com/aida/ADBb0uiQgU54xumsgqsaXRdJANvul0xRp2cw3Py-TgfBiBc5NZG8u6RJyrnKJip7LvsdePZSgIan-iuqLn9_KzjExY51Mjz9MIA73LF_W1tNwWf32DwqU2dRrl2RPAKic6gGhsdMqKSDwAgxjziCoO6VhxahPA3f-Lpann8y91J340B8FmZix3GMy9y7pO1fniYfbAizk4c2vH70jhV68yMj9es7IpijkXdYrfO5s8vpi6jKf01yZ0xBW5eBJQ"/>
+<div class="flex justify-between items-center mb-2 relative z-10">
+<h3 class="font-body-md text-body-md font-semibold text-[#F0F4F8]">Learner Profile</h3>
+<button class="text-[#2563EB] font-label-md text-label-md hover:underline">Edit</button>
+</div>
+<div class="grid grid-cols-2 gap-4 relative z-10">
+<div>
+<p class="font-body-sm text-body-sm text-[#869585]">School</p>
+<p class="font-body-sm text-body-sm text-[#F0F4F8] mt-1">University of Tech</p>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-[#869585]">Program</p>
+<p class="font-body-sm text-body-sm text-[#F0F4F8] mt-1">Computer Science</p>
+</div>
+<div class="col-span-2">
+<p class="font-body-sm text-body-sm text-[#869585]">Income Type</p>
+<p class="font-body-sm text-body-sm text-[#F0F4F8] mt-1">Student / Unemployed</p>
+</div>
+</div>
+</section>
+<!-- Role Card -->
+<section class="card-surface rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-[#132238] flex items-center justify-center">
+<span class="material-symbols-outlined text-[#22C55E]" data-icon="trending_up">trending_up</span>
+</div>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-[#F0F4F8]">Switch to Sponsor</h3>
+<p class="font-body-sm text-body-sm text-[#869585]">Fund learners and earn yield</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-[#1A2E45] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#22C55E]"></div>
+</label>
+</section>
+<!-- App Settings -->
+<section class="card-surface rounded-xl p-4 flex flex-col gap-4">
+<h3 class="font-body-md text-body-md font-semibold text-[#F0F4F8] mb-2">App Settings</h3>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#869585]" data-icon="notifications_active">notifications_active</span>
+<span class="font-body-sm text-body-sm text-[#F0F4F8]">Notifications</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-[#1A2E45] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#22C55E]"></div>
+</label>
+</div>
+<div class="h-[1px] w-full bg-[#1E3A52]"></div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#869585]" data-icon="language">language</span>
+<span class="font-body-sm text-body-sm text-[#F0F4F8]">Language</span>
+</div>
+<div class="flex items-center gap-1 text-[#869585] cursor-pointer hover:text-[#F0F4F8] transition-colors">
+<span class="font-body-sm text-body-sm">English</span>
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Security Card -->
+<section class="card-surface rounded-xl p-4 flex flex-col gap-4">
+<h3 class="font-body-md text-body-md font-semibold text-[#F0F4F8] mb-2">Security</h3>
+<div class="flex items-center justify-between bg-[#1A2E45] p-3 rounded-lg border border-[#1E3A52]">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-[#132238] flex items-center justify-center border border-[#1E3A52]">
+<span class="material-symbols-outlined text-[#22C55E] text-sm" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-[#F0F4F8]">Connected Wallet</p>
+<p class="font-label-md text-label-md text-[#22C55E]">Lobstr</p>
+</div>
+</div>
+</div>
+<button class="w-full py-3 px-4 rounded-xl border border-red-500/30 text-red-400 font-label-md text-label-md hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="logout">logout</span>
+        Disconnect wallet
+      </button>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-20 bg-[#1A221A] border-t border-[#3d4a3d] md:hidden">
+<a class="flex flex-col items-center justify-center text-[#bccbb9] px-4 py-1 hover:text-[#4be277] transition-colors duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="school">school</span>
+<span class="font-label-md text-label-md">Learn</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#bccbb9] px-4 py-1 hover:text-[#4be277] transition-colors duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="stairs">stairs</span>
+<span class="font-label-md text-label-md">Loans</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#bccbb9] px-4 py-1 hover:text-[#4be277] transition-colors duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-md text-label-md">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4be277] font-bold bg-[#2f372e] rounded-xl px-4 py-1 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</a>
+</nav>
+</body></html>

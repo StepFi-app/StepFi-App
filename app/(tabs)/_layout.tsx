@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { CreditCard, Settings, TrendingUp } from 'lucide-react-native';
+import { Home, CreditCard, Star, Settings } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 
 export default function TabsLayout() {
@@ -12,21 +12,36 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
+          borderTopWidth: 1,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 4,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
         },
       }}
     >
       <Tabs.Screen
-        name="pay"
+        name="index"
         options={{
-          title: 'Pay',
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="loans"
+        options={{
+          title: 'Loans',
           tabBarIcon: ({ color, size }) => <CreditCard color={color} size={size} />,
         }}
       />
       <Tabs.Screen
-        name="invest"
+        name="reputation"
         options={{
-          title: 'Invest',
-          tabBarIcon: ({ color, size }) => <TrendingUp color={color} size={size} />,
+          title: 'Score',
+          tabBarIcon: ({ color, size }) => <Star color={color} size={size} />,
         }}
       />
       <Tabs.Screen

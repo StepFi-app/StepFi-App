@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StepFi - Learner Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed-variant": "#7f2a21",
+                      "tertiary-fixed": "#ffdad5",
+                      "on-primary-fixed-variant": "#005321",
+                      "outline": "#869585",
+                      "on-primary-container": "#004b1e",
+                      "surface-container": "#1a221a",
+                      "on-error": "#690005",
+                      "on-secondary-container": "#cdd7ff",
+                      "tertiary-fixed-dim": "#ffb4a9",
+                      "on-secondary": "#002a78",
+                      "tertiary-container": "#ff8b7c",
+                      "surface-container-highest": "#2f372e",
+                      "on-surface-variant": "#bccbb9",
+                      "secondary-fixed-dim": "#b4c5ff",
+                      "surface-dim": "#0e150e",
+                      "outline-variant": "#3d4a3d",
+                      "surface-bright": "#333b33",
+                      "surface-variant": "#2f372e",
+                      "surface-container-lowest": "#091009",
+                      "secondary-container": "#0053db",
+                      "primary-fixed-dim": "#4ae176",
+                      "error-container": "#93000a",
+                      "on-primary-fixed": "#002109",
+                      "surface-container-low": "#161d16",
+                      "inverse-on-surface": "#2a322a",
+                      "error": "#ffb4ab",
+                      "on-surface": "#dce5d9",
+                      "primary-fixed": "#6bff8f",
+                      "background": "#0e150e",
+                      "on-tertiary": "#60130d",
+                      "primary": "#4be277",
+                      "secondary": "#b4c5ff",
+                      "secondary-fixed": "#dbe1ff",
+                      "primary-container": "#22c55e",
+                      "surface": "#0e150e",
+                      "inverse-surface": "#dce5d9",
+                      "on-background": "#dce5d9",
+                      "surface-container-high": "#242c24",
+                      "on-secondary-fixed": "#00174b",
+                      "on-primary": "#003915",
+                      "surface-tint": "#4ae176",
+                      "on-tertiary-container": "#76231b",
+                      "inverse-primary": "#006e2f",
+                      "tertiary": "#ffb5ab",
+                      "on-error-container": "#ffdad6",
+                      "on-tertiary-fixed": "#410001",
+                      "on-secondary-fixed-variant": "#003ea8"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-padding": "16px",
+                      "gutter": "16px",
+                      "section-gap": "24px",
+                      "stack-gap": "12px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "label-md": [
+                              "Manrope"
+                      ],
+                      "display-xl": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-lg": [
+                              "Manrope"
+                      ],
+                      "body-sm": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-xl": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen pb-24 md:pb-0">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant flex justify-between items-center px-container-padding h-16 transition-colors duration-200 md:hidden">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden border border-outline-variant">
+<img alt="Alex Avatar" class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait of a young professional in a modern, subtly lit environment. The lighting is sophisticated, with a touch of cinematic rim light highlighting their features against a deep, nocturnal navy background. The mood is confident, upwardly mobile, and trustworthy, reflecting a high-end corporate or tech aesthetic. The colors are muted and professional, blending seamlessly with a dark mode UI theme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzBpzuCw_QmY35BuN7BLYtwIPG40_UVdyFZMVCLLs8ywaJZElaXY7DLznmqD8-fuAkun_v0dwUxSxtzyXpJv7ErnzRHzLbhzrg-ZPoyKQTNq3Dw82SqfQsZ2SgSg0vIqNPtVzREiyy9v_DWrDmVFb2d2Kig1efbYuPLv7YNMs4Ofn64Ssen6_A05eF57biFZ_5HRtr9yOtCUB_iNHzmByRgnQ16DcYi37cxEVXEoakhBmzctLov4N1xeYgSPTy6BdK7fDDhIJZZ4Q"/>
+</div>
+<div>
+<h1 class="font-label-md text-label-md text-on-surface-variant">Good morning, Alex</h1>
+<p class="font-body-sm text-body-sm text-on-surface">G...4f3b</p>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content Area -->
+<main class="pt-20 px-container-padding flex flex-col gap-section-gap md:pt-8 md:max-w-3xl md:mx-auto">
+<!-- Hero Card -->
+<section class="bg-surface rounded-xl border border-outline-variant border-t-2 border-t-primary-container p-4 flex flex-col gap-stack-gap shadow-sm" style="border-color: #22C55E; border-width: 1px; padding-top: 1.5rem; padding-bottom: 1.5rem; position: relative; overflow: hidden;"><div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: linear-gradient(45deg, currentColor 25%, transparent 25%), linear-gradient(-45deg, currentColor 25%, transparent 25%), linear-gradient(45deg, transparent 75%, currentColor 75%), linear-gradient(-45deg, transparent 75%, currentColor 75%); background-size: 40px 40px; background-position: 0 0, 0 20px, 20px -20px, -20px 0px;"></div>
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-body-sm text-body-sm text-on-surface-variant">Your Credit</h2>
+<div class="font-headline-lg text-headline-lg text-primary">$1,000<span class="font-body-md text-body-md text-on-surface-variant">.00</span></div>
+</div>
+<div class="bg-surface-container-highest px-3 py-1 rounded-full border border-outline-variant">
+<span class="font-label-md text-label-md text-on-surface">Silver tier</span>
+</div>
+</div>
+<!-- Progress Bar -->
+<div class="flex flex-col gap-unit mt-2">
+<div class="flex justify-between font-label-md text-label-md">
+<span class="text-on-surface-variant">Used: $250</span>
+<span class="text-secondary">82/100 reputation</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary w-1/4 rounded-full"></div>
+<!-- Assuming progress towards green/sponsorship -->
+<div class="h-full bg-primary-container w-[10%] rounded-full ml-1 opacity-50"></div>
+</div>
+</div>
+</section>
+<!-- Quick Actions Grid -->
+<section class="grid grid-cols-4 gap-gutter">
+<button class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-surface border border-outline-variant flex items-center justify-center text-primary group-hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Apply</span>
+</button>
+<button class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-surface border border-outline-variant flex items-center justify-center text-on-surface group-hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="north_east">north_east</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Pay</span>
+</button>
+<button class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-surface border border-outline-variant flex items-center justify-center text-on-surface group-hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">History</span>
+</button>
+<button class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-surface border border-outline-variant flex items-center justify-center text-on-surface group-hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="how_to_reg">how_to_reg</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Vouches</span>
+</button>
+</section>
+<!-- Active Loans Horizontal Scroll -->
+<section class="flex flex-col gap-stack-gap">
+<h3 class="font-headline-md text-headline-md text-on-surface">Active Loans</h3>
+<div class="flex overflow-x-auto gap-gutter pb-4 -mx-container-padding px-container-padding snap-x md:mx-0 md:px-0">
+<!-- Loan Card 1 -->
+<div class="min-w-[280px] bg-surface rounded-xl border border-outline-variant p-4 flex flex-col gap-stack-gap snap-start">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-surface-container rounded-full flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="school">school</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface font-semibold">DevBootcamp</span>
+</div>
+<span class="bg-surface-container-highest text-primary font-label-md text-label-md px-2 py-1 rounded-md border border-outline-variant">Active</span>
+</div>
+<div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Remaining Balance</div>
+<div class="font-headline-md text-headline-md text-on-surface">$450.00 <span class="font-body-sm text-body-sm text-on-surface-variant">of $600</span></div>
+</div>
+<div class="flex items-center gap-1 mt-2">
+<div class="h-1.5 flex-1 bg-primary rounded-full"></div>
+<div class="h-1.5 flex-1 bg-surface-container-highest rounded-full"></div>
+<div class="h-1.5 flex-1 bg-surface-container-highest rounded-full"></div>
+<div class="h-1.5 flex-1 bg-surface-container-highest rounded-full"></div>
+</div>
+</div>
+<!-- Loan Card 2 -->
+<div class="min-w-[280px] bg-surface rounded-xl border border-outline-variant p-4 flex flex-col gap-stack-gap snap-start opacity-75">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-surface-container rounded-full flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="laptop_mac">laptop_mac</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface font-semibold">TechGear</span>
+</div>
+<span class="bg-surface-container-highest text-on-surface-variant font-label-md text-label-md px-2 py-1 rounded-md border border-outline-variant">Pending</span>
+</div>
+<div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Requested Amount</div>
+<div class="font-headline-md text-headline-md text-on-surface">$1,200.00</div>
+</div>
+<div class="flex items-center gap-1 mt-2">
+<div class="h-1.5 flex-1 bg-surface-container-highest rounded-full"></div>
+<div class="h-1.5 flex-1 bg-surface-container-highest rounded-full"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Upcoming Payments List -->
+<section class="flex flex-col gap-stack-gap mb-8">
+<h3 class="font-headline-md text-headline-md text-on-surface">Upcoming Payments</h3>
+<div class="bg-surface rounded-xl border border-outline-variant overflow-hidden">
+<!-- List Item 1 -->
+<div class="p-4 flex justify-between items-center border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-surface-container rounded-lg flex items-center justify-center text-on-surface border border-outline-variant">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</div>
+<div>
+<div class="font-body-md text-body-md text-on-surface font-semibold">Installment 1/4</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">DevBootcamp · Due in 5 days</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-body-md text-body-md text-on-surface font-semibold">$150.00</div>
+<button class="font-label-md text-label-md text-primary hover:underline">Pay Now</button>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="p-4 flex justify-between items-center hover:bg-surface-container-high transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-surface-container rounded-lg flex items-center justify-center text-on-surface-variant border border-outline-variant">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+</div>
+<div>
+<div class="font-body-md text-body-md text-on-surface font-semibold">Installment 2/4</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">DevBootcamp · Nov 15</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-body-md text-body-md text-on-surface font-semibold">$150.00</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-20 bg-surface-container border-t border-outline-variant rounded-t-xl md:hidden">
+<a class="flex flex-col items-center justify-center text-primary relative px-4 py-1 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1">home</span>
+<span class="font-label-md text-label-md mt-1">Home</span>
+<div class="absolute -bottom-1 w-1 h-1 bg-primary rounded-full"></div>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="credit_card">credit_card</span>
+<span class="font-label-md text-label-md mt-1">Loans</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="font-label-md text-label-md mt-1">Reputation</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md mt-1">Settings</span>
+</a>
+</nav>
+</body></html>

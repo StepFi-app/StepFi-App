@@ -1,5 +1,9 @@
+export type UserRole = 'learner' | 'sponsor';
+
 export interface LearnerProfile {
   walletAddress: string;
+  displayName?: string;
+  role?: UserRole;
   school?: string;
   program?: string;
   programType?: string;
@@ -7,4 +11,6 @@ export interface LearnerProfile {
   monthlyIncome?: number;
   country?: string;
   city?: string;
+  organization?: string;
+  investmentFocus?: string;
 }

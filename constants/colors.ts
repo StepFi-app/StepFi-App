@@ -9,6 +9,8 @@ export const colors = {
   textSecondary: '#A8BCCF',
   textMuted: '#5A7A94',
   textFaint: '#3A5570',
+  primary: '#4BE277',
+  primaryContainer: '#22C55E',
   brandBlue: '#2563EB',
   brandGreen: '#22C55E',
   brandBlueDim: 'rgba(37, 99, 235, 0.15)',
