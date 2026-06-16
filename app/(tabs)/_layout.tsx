@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, CreditCard, Star, Settings } from 'lucide-react-native';
+import { Home, CreditCard, Calendar, Star, Settings } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 
 export default function TabsLayout() {
@@ -35,6 +35,13 @@ export default function TabsLayout() {
         options={{
           title: 'Loans',
           tabBarIcon: ({ color, size }) => <CreditCard color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="calendar"
+        options={{
+          title: 'Calendar',
+          tabBarIcon: ({ color, size }) => <Calendar color={color} size={size} />,
         }}
       />
       <Tabs.Screen
