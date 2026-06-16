@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Settings,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Switch,
+  TextInput,
+  Modal,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {
   User,
   Bell,
   HelpCircle,
@@ -13,13 +20,14 @@ import {
   Wallet,
   Copy,
   CheckCircle,
+  Fingerprint,
 } from 'lucide-react-native';
-import * as Clipboard from 'expo-linking';
 import { colors } from '../../constants/colors';
 import { Card } from '../../components/shared/Card';
 import { useAuthStore } from '../../stores/auth.store';
 import { useUserStore } from '../../stores/user.store';
 import { useWalletStore } from '../../stores/wallet.store';
+import { biometricService } from '../../src/security/biometric.service';
 
 interface MenuItemProps {
   icon: typeof User;
@@ -73,7 +81,6 @@ function MenuItem({
 }
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const walletAddress = useAuthStore((s) => s.walletAddress);
   const profile = useUserStore((s) => s.profile);
@@ -81,12 +88,30 @@ export default function SettingsScreen() {
   const setDisconnected = useWalletStore((s) => s.setDisconnected);
   const [copied, setCopied] = useState(false);
 
+  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
+  const [biometricsAvailable, setBiometricsAvailable] = useState(false);
+  const [pinModalVisible, setPinModalVisible] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinConfirm, setPinConfirm] = useState('');
+  const [pinStep, setPinStep] = useState<'create' | 'confirm'>('create');
+  const [pinError, setPinError] = useState('');
+
+  useEffect(() => {
+    async function loadState() {
+      const enabled = await biometricService.isBiometricsEnabled();
+      const { isAvailable, isEnrolled } =
+        await biometricService.checkBiometricAvailability();
+      setBiometricsEnabled(enabled);
+      setBiometricsAvailable(isAvailable && isEnrolled);
+    }
+    loadState();
+  }, []);
+
   const truncatedAddress = walletAddress
     ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-6)}`
     : 'Not connected';
 
   const handleCopyAddress = () => {
-    // Using a simple state flag since clipboard access varies across platforms
     if (walletAddress) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -106,12 +131,89 @@ export default function SettingsScreen() {
             setDisconnected();
             clearUser();
             await clearAuth();
-            // Auth guard will redirect to sign-in
           },
         },
       ],
     );
   };
+
+  const openPinSetup = useCallback(() => {
+    setPinInput('');
+    setPinConfirm('');
+    setPinStep('create');
+    setPinError('');
+    setPinModalVisible(true);
+  }, []);
+
+  const handlePinSetupNext = useCallback(() => {
+    if (pinInput.length < 4 || pinInput.length > 6) {
+      setPinError('PIN must be 4-6 digits');
+      return;
+    }
+    if (pinStep === 'create') {
+      setPinStep('confirm');
+      setPinConfirm('');
+      setPinError('');
+    } else {
+      if (pinInput !== pinConfirm) {
+        setPinError('PINs do not match');
+        return;
+      }
+      biometricService.setPin(pinInput).then(() => {
+        setPinModalVisible(false);
+        biometricService.setBiometricsEnabled(true).then(() => {
+          setBiometricsEnabled(true);
+        });
+      });
+    }
+  }, [pinInput, pinConfirm, pinStep]);
+
+  const handleToggleBiometrics = useCallback(
+    async (value: boolean) => {
+      if (value) {
+        const { isAvailable, isEnrolled } =
+          await biometricService.checkBiometricAvailability();
+        if (!isAvailable || !isEnrolled) {
+          const hasExistingPin = await biometricService.hasPin();
+          if (hasExistingPin) {
+            await biometricService.setBiometricsEnabled(true);
+            setBiometricsEnabled(true);
+          } else {
+            openPinSetup();
+          }
+          return;
+        }
+
+        const result = await biometricService.authenticateBiometric();
+        if (result.success) {
+          const hasExistingPin = await biometricService.hasPin();
+          if (!hasExistingPin) {
+            openPinSetup();
+          } else {
+            await biometricService.setBiometricsEnabled(true);
+            setBiometricsEnabled(true);
+          }
+        }
+      } else {
+        Alert.alert(
+          'Disable biometric lock',
+          'Are you sure? Your PIN will also be removed.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Disable',
+              style: 'destructive',
+              onPress: async () => {
+                await biometricService.disableBiometrics();
+                setBiometricsEnabled(false);
+              },
+            },
+          ],
+        );
+      }
+    },
+    [openPinSetup],
+  );
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
@@ -129,7 +231,6 @@ export default function SettingsScreen() {
         {/* Profile Card */}
         <Card className="mb-6 p-5 gap-4">
           <View className="flex-row items-center gap-4">
-            {/* Avatar */}
             <View
               className="h-14 w-14 rounded-full items-center justify-center"
               style={{ backgroundColor: colors.brandBlueDim }}
@@ -152,7 +253,6 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          {/* Wallet address */}
           <TouchableOpacity
             className="flex-row items-center gap-3 rounded-xl p-3"
             style={{ backgroundColor: colors.subtle }}
@@ -174,7 +274,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </Card>
 
-        {/* Menu Section */}
+        {/* Account Section */}
         <Text
           className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
           style={{ color: colors.textMuted }}
@@ -201,6 +301,46 @@ export default function SettingsScreen() {
           />
         </Card>
 
+        {/* Security Section */}
+        <Text
+          className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
+          style={{ color: colors.textMuted }}
+        >
+          Security
+        </Text>
+        <Card className="mb-6 px-4">
+          <View className="flex-row items-center py-4 gap-3">
+            <View
+              className="h-10 w-10 rounded-xl items-center justify-center"
+              style={{ backgroundColor: colors.brandBlueDim }}
+            >
+              <Fingerprint size={20} color={colors.brandBlue} />
+            </View>
+            <View className="flex-1">
+              <Text
+                className="text-sm font-medium"
+                style={{ color: colors.textPrimary }}
+              >
+                Biometric Lock
+              </Text>
+              <Text className="text-xs" style={{ color: colors.textMuted }}>
+                {biometricsEnabled
+                  ? 'Lock screen is active'
+                  : !biometricsAvailable
+                    ? 'PIN-only mode'
+                    : 'Require authentication to open app'}
+              </Text>
+            </View>
+            <Switch
+              value={biometricsEnabled}
+              onValueChange={handleToggleBiometrics}
+              trackColor={{ false: colors.subtle, true: colors.primaryContainer }}
+              thumbColor={biometricsEnabled ? colors.primary : colors.textMuted}
+            />
+          </View>
+        </Card>
+
+        {/* Support Section */}
         <Text
           className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
           style={{ color: colors.textMuted }}
@@ -239,7 +379,6 @@ export default function SettingsScreen() {
           />
         </Card>
 
-        {/* App version */}
         <Text
           className="text-xs text-center mt-6"
           style={{ color: colors.textFaint }}
@@ -247,6 +386,104 @@ export default function SettingsScreen() {
           StepFi v1.0.0
         </Text>
       </ScrollView>
+
+      {/* PIN Setup Modal */}
+      <Modal
+        visible={pinModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPinModalVisible(false)}
+      >
+        <View
+          className="flex-1 items-center justify-center px-8"
+          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+        >
+          <View
+            className="w-full rounded-2xl p-6 gap-5"
+            style={{ backgroundColor: colors.surface }}
+          >
+            <Text
+              className="text-xl font-bold text-center"
+              style={{ color: colors.textPrimary }}
+            >
+              {pinStep === 'create' ? 'Set PIN' : 'Confirm PIN'}
+            </Text>
+            <Text
+              className="text-sm text-center"
+              style={{ color: colors.textSecondary }}
+            >
+              {pinStep === 'create'
+                ? 'Enter a 4-6 digit PIN for fallback access'
+                : 'Re-enter your PIN to confirm'}
+            </Text>
+
+            {pinError ? (
+              <Text
+                className="text-sm text-center"
+                style={{ color: colors.error }}
+              >
+                {pinError}
+              </Text>
+            ) : null}
+
+            <TextInput
+              className="w-full text-center text-2xl tracking-widest rounded-xl px-4 py-3"
+              style={{
+                color: colors.textPrimary,
+                backgroundColor: colors.subtle,
+                borderWidth: 1,
+                borderColor: colors.borderSubtle,
+              }}
+              placeholder={pinStep === 'confirm' ? 'Re-enter PIN' : 'Enter PIN'}
+              placeholderTextColor={colors.textMuted}
+              value={pinStep === 'create' ? pinInput : pinConfirm}
+              onChangeText={pinStep === 'create' ? setPinInput : setPinConfirm}
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={6}
+              autoFocus
+            />
+
+            <TouchableOpacity
+              className="w-full py-4 rounded-xl items-center justify-center"
+              style={{
+                backgroundColor: colors.primaryContainer,
+                opacity:
+                  (pinStep === 'create' ? pinInput : pinConfirm).length >= 4
+                    ? 1
+                    : 0.5,
+              }}
+              activeOpacity={0.8}
+              onPress={handlePinSetupNext}
+              disabled={
+                (pinStep === 'create' ? pinInput : pinConfirm).length < 4
+              }
+            >
+              <Text
+                className="text-base font-bold"
+                style={{ color: colors.background }}
+              >
+                {pinStep === 'create' ? 'Next' : 'Confirm & Enable'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="py-2 items-center"
+              onPress={() => {
+                setPinModalVisible(false);
+                setBiometricsEnabled(false);
+              }}
+            >
+              <Text
+                className="text-sm"
+                style={{ color: colors.textMuted }}
+              >
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

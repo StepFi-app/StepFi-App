@@ -16,7 +16,8 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "expo-local-authentication"
     ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",

@@ -1,8 +1,14 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/auth.store';
+import { useSecurityStore } from '../src/security/security.store';
+import { biometricService } from '../src/security/biometric.service';
+import { BiometricGate } from '../src/components/BiometricGate';
 import '../global.css';
+
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 
 function useAuthGuard() {
   const segments = useSegments();
@@ -25,6 +31,29 @@ function useAuthGuard() {
 
 export default function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const isLocked = useSecurityStore((s) => s.isLocked);
+  const biometricCheckDone = useSecurityStore((s) => s.biometricCheckDone);
+
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastActiveRef = useRef<number>(Date.now());
+
+  const clearIdleTimer = useCallback(() => {
+    if (idleTimerRef.current !== null) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+  }, []);
+
+  const startIdleTimer = useCallback(() => {
+    clearIdleTimer();
+    idleTimerRef.current = setTimeout(() => {
+      if (useAuthStore.getState().isAuthenticated) {
+        useSecurityStore.getState().lock();
+      }
+    }, IDLE_TIMEOUT_MS);
+  }, [clearIdleTimer]);
 
   useEffect(() => {
     void hydrate();
@@ -32,12 +61,72 @@ export default function RootLayout() {
 
   useAuthGuard();
 
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !biometricCheckDone) {
+      useSecurityStore.getState().markBiometricCheckDone();
+      biometricService.isBiometricsEnabled().then((enabled) => {
+        if (enabled) {
+          useSecurityStore.getState().lock();
+        }
+      });
+    }
+
+    if (!isAuthenticated) {
+      useSecurityStore.getState().reset();
+    }
+  }, [isLoading, isAuthenticated, biometricCheckDone]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        const elapsed = Date.now() - lastActiveRef.current;
+        if (
+          elapsed >= IDLE_TIMEOUT_MS &&
+          useAuthStore.getState().isAuthenticated
+        ) {
+          useSecurityStore.getState().lock();
+        }
+        if (!useSecurityStore.getState().isLocked) {
+          startIdleTimer();
+        }
+      } else if (state === 'background' || state === 'inactive') {
+        lastActiveRef.current = Date.now();
+        clearIdleTimer();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [startIdleTimer, clearIdleTimer]);
+
+  useEffect(() => {
+    if (!isLocked && isAuthenticated) {
+      startIdleTimer();
+    }
+  }, [isLocked, isAuthenticated, startIdleTimer]);
+
+  if (isLoading) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
+      {isLocked && isAuthenticated ? (
+        <BiometricGate />
+      ) : (
+        <View
+          style={{ flex: 1 }}
+          onTouchStart={() => {
+            if (!useSecurityStore.getState().isLocked) {
+              startIdleTimer();
+            }
+          }}
+        >
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+        </View>
+      )}
     </SafeAreaProvider>
   );
 }
