@@ -104,7 +104,6 @@ export function initSentry(): void {
 
 /**
  * Set the Sentry user context when a wallet connects.
- * We only set the wallet address as `id` — no PII like email.
  */
 export function setSentryUser(walletAddress: string): void {
   Sentry.setUser({ id: walletAddress });
