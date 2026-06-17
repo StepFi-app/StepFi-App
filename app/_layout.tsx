@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth.store';
 import { useSecurityStore } from '../src/security/security.store';
 import { biometricService } from '../src/security/biometric.service';
 import { BiometricGate } from '../src/components/BiometricGate';
+import { walletService } from '../services/wallet.service';
 import '../global.css';
 
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
@@ -57,6 +58,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     void hydrate();
+    void walletService.initialize();
   }, [hydrate]);
 
   useAuthGuard();
