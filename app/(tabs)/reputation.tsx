@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { 
+  useSharedValue, 
+  useDerivedValue, 
+  withTiming, 
+  Easing, 
+  runOnJS 
+} from 'react-native-reanimated';
 import {
   Star,
   AlertCircle,
@@ -16,6 +23,9 @@ import { EmptyState } from '../../components/shared/EmptyState';
 import { useUserStore } from '../../stores/user.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { reputationService } from '../../services/reputation.service';
+import { useReputationMilestones } from '../../hooks/useReputationMilestones';
+import { TierUpModal } from '../../components/reputation/TierUpModal';
+import { MilestoneModal } from '../../components/reputation/MilestoneModal';
 
 interface TipItem {
   icon: typeof CheckCircle;
@@ -61,6 +71,31 @@ function getTierDescription(tier: string): string {
   }
 }
 
+const AnimatedScore = ({ score }: { score: number }) => {
+  const animatedValue = useSharedValue(0);
+  const [displayScore, setDisplayScore] = useState(0);
+
+  useEffect(() => {
+    animatedValue.value = withTiming(score, {
+      duration: 1500,
+      easing: Easing.out(Easing.quad),
+    });
+  }, [score, animatedValue]);
+
+  useDerivedValue(() => {
+    runOnJS(setDisplayScore)(Math.floor(animatedValue.value));
+  });
+
+  return (
+    <Text
+      className="text-4xl font-bold"
+      style={{ color: colors.textPrimary }}
+    >
+      {displayScore}
+    </Text>
+  );
+};
+
 export default function ReputationScreen() {
   const reputation = useUserStore((s) => s.reputation);
   const setReputation = useUserStore((s) => s.setReputation);
@@ -68,6 +103,15 @@ export default function ReputationScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const {
+    showTierUp,
+    newTier,
+    closeTierUp,
+    showMilestone,
+    milestoneType,
+    closeMilestone,
+  } = useReputationMilestones();
 
   const fetchReputation = useCallback(async () => {
     if (!walletAddress) {
@@ -127,8 +171,8 @@ export default function ReputationScreen() {
   }
 
   const tierColor =
-    reputation?.tier && reputation.tier in colors.tier
-      ? colors.tier[reputation.tier as keyof typeof colors.tier]
+    reputation?.tier && reputation.tier.toLowerCase() in colors.tier
+      ? colors.tier[reputation.tier.toLowerCase() as keyof typeof colors.tier]
       : colors.textMuted;
 
   const scorePercent = reputation ? Math.min(100, reputation.score) : 0;
@@ -164,12 +208,7 @@ export default function ReputationScreen() {
               backgroundColor: tierColor + '10',
             }}
           >
-            <Text
-              className="text-4xl font-bold"
-              style={{ color: colors.textPrimary }}
-            >
-              {reputation?.score ?? 0}
-            </Text>
+            <AnimatedScore score={reputation?.score ?? 0} />
             <Text className="text-xs" style={{ color: colors.textMuted }}>
               / 100
             </Text>
@@ -286,6 +325,18 @@ export default function ReputationScreen() {
           ))}
         </Card>
       </ScrollView>
+
+      {/* Celebrations */}
+      <TierUpModal 
+        isVisible={showTierUp} 
+        onClose={closeTierUp} 
+        tier={newTier ?? ''} 
+      />
+      <MilestoneModal 
+        isVisible={showMilestone} 
+        onClose={closeMilestone} 
+        milestone={milestoneType ?? ''} 
+      />
     </SafeAreaView>
   );
 }

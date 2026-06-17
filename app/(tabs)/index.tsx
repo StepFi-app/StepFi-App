@@ -19,6 +19,7 @@ import { useLoansStore } from '../../stores/loans.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { loansService } from '../../services/loans.service';
 import { reputationService } from '../../services/reputation.service';
+import { ReputationProgressWidget } from '../../components/reputation/ReputationProgressWidget';
 import type { AvailableCredit } from '../../services/loans.service';
 
 export default function HomeScreen() {
@@ -120,7 +121,7 @@ export default function HomeScreen() {
           <View className="flex-row justify-between items-end">
             <View>
               <Text className="text-sm font-medium mb-1" style={{ color: colors.textSecondary }}>
-                Your Credit
+                Available Credit
               </Text>
               <View className="flex-row items-end">
                 <Text className="text-4xl font-bold" style={{ color: colors.brandGreen }}>
@@ -132,11 +133,11 @@ export default function HomeScreen() {
               </View>
             </View>
             <View
-              className="px-3 py-1 rounded-full border"
-              style={{ backgroundColor: colors.subtle, borderColor: colors.borderSubtle }}
+              className="px-2 py-0.5 rounded-md"
+              style={{ backgroundColor: colors.brandGreen + '15' }}
             >
-              <Text className="text-xs font-semibold capitalize" style={{ color: colors.textPrimary }}>
-                {reputation?.tier ?? 'Starter'} tier
+              <Text className="text-[10px] font-bold uppercase tracking-widest" style={{ color: colors.brandGreen }}>
+                Active Limit
               </Text>
             </View>
           </View>
@@ -147,15 +148,15 @@ export default function HomeScreen() {
               <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>
                 Used: ${credit?.used?.toLocaleString() ?? '0'}
               </Text>
-              <Text className="text-xs font-semibold" style={{ color: colors.brandBlue }}>
-                {reputation?.score ?? 0}/100 reputation
+              <Text className="text-xs font-semibold" style={{ color: colors.textMuted }}>
+                Limit: ${credit?.limit?.toLocaleString() ?? '0'}
               </Text>
             </View>
             <View className="h-2 w-full rounded-full flex-row overflow-hidden" style={{ backgroundColor: colors.subtle }}>
               {credit && credit.limit > 0 ? (
                 <View
                   className="h-full rounded-full"
-                  style={{ backgroundColor: colors.brandBlue, width: `${(credit.used / credit.limit) * 100}%` }}
+                  style={{ backgroundColor: colors.brandGreen, width: `${(credit.used / credit.limit) * 100}%` }}
                 />
               ) : null}
             </View>
@@ -165,12 +166,17 @@ export default function HomeScreen() {
         {/* Quick Actions Grid */}
         <View className="flex-row justify-between mb-8">
           {[
-            { icon: Plus, label: 'Apply', color: colors.brandGreen },
-            { icon: ArrowUpRight, label: 'Pay', color: colors.textPrimary },
-            { icon: History, label: 'History', color: colors.textPrimary },
-            { icon: BadgeCheck, label: 'Vouches', color: colors.textPrimary },
+            { icon: Plus, label: 'Apply', color: colors.brandGreen, route: '/(tabs)/pay' },
+            { icon: ArrowUpRight, label: 'Pay', color: colors.textPrimary, route: '/(tabs)/pay' },
+            { icon: History, label: 'History', color: colors.textPrimary, route: '/(tabs)/pay' },
+            { icon: BadgeCheck, label: 'Vouches', color: colors.textPrimary, route: '/(tabs)/reputation' },
           ].map((action, idx) => (
-            <TouchableOpacity key={idx} className="flex-col items-center gap-2" activeOpacity={0.7}>
+            <TouchableOpacity 
+              key={idx} 
+              className="flex-col items-center gap-2" 
+              activeOpacity={0.7}
+              onPress={() => action.route && router.push(action.route as any)}
+            >
               <View
                 className="w-14 h-14 rounded-full flex items-center justify-center border"
                 style={{ backgroundColor: colors.surface, borderColor: colors.borderSubtle }}
@@ -183,6 +189,9 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Reputation Progress Widget */}
+        <ReputationProgressWidget />
 
         {/* Active Loans Horizontal Scroll */}
         <View className="flex-col gap-3 mb-8">
