@@ -141,6 +141,26 @@ npx expo start --web
 
 ---
 
+## 🚢 Release Process
+
+1. Ensure all changes are merged to `main`.
+2. From `main`, run `npm version patch` (or `minor`/`major`) to bump the version and create a tag:
+   ```bash
+   git checkout main
+   git pull
+   npm version patch   # creates v0.x.x locally
+   git push --tags
+   ```
+3. Pushing a `v*` tag triggers the [EAS Production Build](.github/workflows/eas-build.yml) workflow:
+   - Builds the Android APK via EAS Build (`production` profile)
+   - Creates a GitHub Release with auto-generated release notes
+   - Attaches the APK as a downloadable release asset
+4. Monitor the build at [Actions → EAS Production Build](https://github.com/StepFi-app/StepFi-App/actions/workflows/eas-build.yml).
+
+> **Note:** The workflow requires the `EXPO_TOKEN` repository secret. Set it in **Settings → Secrets and variables → Actions → New repository secret** using a token from your [Expo access tokens settings](https://expo.dev/accounts/settings/access-tokens).
+
+---
+
 ## 🤝 Contributing
 
 We welcome React Native and Expo developers of all levels! See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup, code style, and the PR process.

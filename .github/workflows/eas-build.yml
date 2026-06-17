@@ -1,0 +1,74 @@
+name: EAS Production Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  production-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Submit EAS Build
+        run: eas build --platform android --profile production --non-interactive --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Wait for build to finish and download APK
+        run: |
+          BUILD_ID=""
+          for i in $(seq 1 60); do
+            BUILD_JSON=$(eas build:list --json --platform android --limit 1 2>/dev/null || echo "")
+            if [ -n "$BUILD_JSON" ] && [ "$BUILD_JSON" != "[]" ]; then
+              BUILD_ID=$(echo "$BUILD_JSON" | jq -r '.[0].id // empty')
+              STATUS=$(echo "$BUILD_JSON" | jq -r '.[0].status // empty')
+              echo "Build status: $STATUS (attempt $i/60)"
+              if [ "$STATUS" = "finished" ]; then
+                echo "Build finished!"
+                break
+              elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "cancelled" ]; then
+                echo "::error::Build $STATUS"
+                exit 1
+              fi
+            fi
+            sleep 30
+          done
+
+          if [ -z "$BUILD_ID" ]; then
+            echo "::error::Build did not finish within the timeout period"
+            exit 1
+          fi
+
+          eas build:download "$BUILD_ID" --output app-release.apk
+          echo "artifact_path=app-release.apk" >> "$GITHUB_ENV"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "Release ${{ github.ref_name }}" \
+            --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload APK to Release
+        run: |
+          gh release upload "${{ github.ref_name }}" app-release.apk --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
