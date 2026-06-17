@@ -7,6 +7,7 @@
 
 [![Open Source](https://img.shields.io/badge/Open%20Source-Yes-green?style=flat-square)](https://opensource.org/)
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](./LICENSE)
+[![CI](https://github.com/StepFi-app/StepFi-App/actions/workflows/ci.yml/badge.svg)](https://github.com/StepFi-app/StepFi-App/actions/workflows/ci.yml)
 
 # StepFi App
 
