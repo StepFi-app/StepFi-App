@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useInvest } from '../../hooks/invest/use-invest';
+import { TransactionStatus } from '../../types/transaction.types';
 // Centralized color palette shared with Tailwind
 const colors = require('../../theme/colors.json');
 
@@ -22,7 +24,16 @@ const InvestScreen = () => {
     handleAmountChange,
     isDepositValid,
     handleDeposit,
+    transactionStatus,
+    transactionHash,
+    transactionError,
+    resetTransaction,
   } = useInvest();
+
+  const isProcessing =
+    transactionStatus === TransactionStatus.PREPARING ||
+    transactionStatus === TransactionStatus.SIGNING ||
+    transactionStatus === TransactionStatus.BROADCASTING;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -143,22 +154,74 @@ const InvestScreen = () => {
                 <Text className="text-xs text-textSubtle">Minimum deposit $10</Text>
               </View>
 
+              {/* Transaction Feedback */}
+              {transactionStatus === TransactionStatus.ERROR && transactionError && (
+                <View className="mb-3 rounded-xl bg-red-50 p-3">
+                  <View className="flex-row items-start gap-2">
+                    <Ionicons name="alert-circle" size={18} color="#DC2626" />
+                    <View className="flex-1">
+                      <Text className="text-sm font-semibold text-red-700">
+                        Transaction failed
+                      </Text>
+                      <Text className="text-xs text-red-600 mt-1">
+                        {transactionError.message}
+                      </Text>
+                      <TouchableOpacity onPress={resetTransaction} className="mt-2">
+                        <Text className="text-xs font-semibold text-red-700 underline">
+                          Dismiss
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {transactionStatus === TransactionStatus.SUCCESS && transactionHash && (
+                <View className="mb-3 rounded-xl bg-green-50 p-3">
+                  <View className="flex-row items-start gap-2">
+                    <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
+                    <View className="flex-1">
+                      <Text className="text-sm font-semibold text-green-700">
+                        Deposit successful
+                      </Text>
+                      <Text className="text-xs text-green-600 mt-1 font-mono">
+                        TX: {transactionHash.slice(0, 16)}...
+                      </Text>
+                      <TouchableOpacity onPress={resetTransaction} className="mt-2">
+                        <Text className="text-xs font-semibold text-green-700 underline">
+                          Make another deposit
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              )}
+
               {/* Deposit Button */}
               <TouchableOpacity
                 className={`items-center rounded-2xl py-4 ${
-                  isDepositValid() ? 'bg-ctaStrong' : 'bg-cta'
+                  isDepositValid() && !isProcessing ? 'bg-ctaStrong' : 'bg-cta'
                 }`}
                 onPress={handleDeposit}
-                disabled={!isDepositValid()}
+                disabled={!isDepositValid() || isProcessing}
                 accessibilityLabel="Deposit funds button"
-                accessibilityState={{ disabled: !isDepositValid() }}
+                accessibilityState={{ disabled: !isDepositValid() || isProcessing }}
                 accessibilityHint={!isDepositValid() ? 'Minimum $10 required' : undefined}>
-                <Text
-                  className={`text-base font-semibold ${
-                    isDepositValid() ? 'text-white' : 'text-gray-200'
-                  }`}>
-                  Deposit funds
-                </Text>
+                {isProcessing ? (
+                  <View className="flex-row items-center gap-2">
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <Text className="text-base font-semibold text-white">
+                      Processing...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text
+                    className={`text-base font-semibold ${
+                      isDepositValid() ? 'text-white' : 'text-gray-200'
+                    }`}>
+                    Deposit funds
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
 

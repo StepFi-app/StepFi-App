@@ -17,9 +17,11 @@ import { Input } from '../../components/shared/Input';
 import { useUserStore } from '../../stores/user.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { useWalletStore } from '../../stores/wallet.store';
+import { useTranslation } from '../../hooks/useTranslation';
 import type { LearnerProfile } from '../../types/user.types';
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const role = useUserStore((s) => s.role);
   const setProfile = useUserStore((s) => s.setProfile);
@@ -112,10 +114,10 @@ export default function RegisterScreen() {
             {/* Headers */}
             <View className="mb-6">
               <Text className="text-[32px] font-bold mb-2" style={{ color: colors.textPrimary }}>
-                Tell us about yourself
+                {t('auth.register.title')}
               </Text>
               <Text className="text-[16px]" style={{ color: colors.textSecondary }}>
-                This helps us match you with the right {isLearner ? 'sponsors' : 'learners'}.
+                {t('auth.register.subtitleMatch', { role: isLearner ? t('auth.register.sponsors') : t('auth.register.learners') })}
               </Text>
             </View>
 
@@ -131,15 +133,15 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity activeOpacity={0.7}>
                   <Text className="text-[14px] font-semibold" style={{ color: colors.primary }}>
-                    Change Photo
+                    {t('auth.register.changePhoto')}
                   </Text>
                 </TouchableOpacity>
               </View>
 
               {/* Common field */}
               <Input
-                label="Display Name"
-                placeholder="e.g. AlexLearnsWeb3"
+                label={t('auth.register.displayName')}
+                placeholder={t('auth.register.displayNamePlaceholder')}
                 value={displayName}
                 onChangeText={setDisplayName}
                 autoCapitalize="words"
@@ -149,20 +151,20 @@ export default function RegisterScreen() {
               {isLearner ? (
                 <>
                   <Input
-                    label="School/Institution"
-                    placeholder="e.g. University of Blockchain"
+                    label={t('auth.register.school')}
+                    placeholder={t('auth.register.schoolPlaceholder')}
                     value={school}
                     onChangeText={setSchool}
                   />
                   <Input
-                    label="Program/Course"
-                    placeholder="e.g. Smart Contract Development"
+                    label={t('auth.register.program')}
+                    placeholder={t('auth.register.programPlaceholder')}
                     value={program}
                     onChangeText={setProgram}
                   />
                   <Input
-                    label="Income Type (optional)"
-                    placeholder="e.g. Stipend, Freelance, Part-time"
+                    label={t('auth.register.incomeType')}
+                    placeholder={t('auth.register.incomeTypePlaceholder')}
                     value={incomeType}
                     onChangeText={setIncomeType}
                   />
@@ -170,14 +172,14 @@ export default function RegisterScreen() {
               ) : (
                 <>
                   <Input
-                    label="Organization"
-                    placeholder="e.g. Stellar Development Foundation"
+                    label={t('auth.register.organization')}
+                    placeholder={t('auth.register.organizationPlaceholder')}
                     value={organization}
                     onChangeText={setOrganization}
                   />
                   <Input
-                    label="Investment Focus (optional)"
-                    placeholder="e.g. Education, Dev tools, Africa"
+                    label={t('auth.register.investmentFocus')}
+                    placeholder={t('auth.register.investmentFocusPlaceholder')}
                     value={investmentFocus}
                     onChangeText={setInvestmentFocus}
                   />
@@ -187,7 +189,7 @@ export default function RegisterScreen() {
               {/* Wallet address display */}
               <View className="gap-1 mt-2">
                 <Text className="text-[14px]" style={{ color: colors.textSecondary }}>
-                  Wallet address
+                  {t('auth.register.walletAddress')}
                 </Text>
                 <View
                   className="h-12 rounded-xl px-4 justify-center"
@@ -204,7 +206,7 @@ export default function RegisterScreen() {
                   >
                     {publicKey
                       ? `${publicKey.slice(0, 8)}...${publicKey.slice(-8)}`
-                      : 'Not connected'}
+                      : t('auth.register.notConnected')}
                   </Text>
                 </View>
               </View>
@@ -230,7 +232,7 @@ export default function RegisterScreen() {
               disabled={!isValid || isSubmitting}
             >
               <Text className="text-[14px] font-bold" style={{ color: colors.background }}>
-                {isSubmitting ? 'Saving...' : 'Continue'}
+                {isSubmitting ? t('auth.register.saving') : t('auth.register.continue')}
               </Text>
             </TouchableOpacity>
           </View>

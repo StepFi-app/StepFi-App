@@ -4,8 +4,10 @@ import { useRouter } from 'expo-router';
 import { TrendingUp, ChevronRight } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { useUserStore } from '../../stores/user.store';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export function ReputationProgressWidget() {
+  const { t } = useTranslation();
   const router = useRouter();
   const reputation = useUserStore((s) => s.reputation);
 
@@ -14,20 +16,22 @@ export function ReputationProgressWidget() {
   const currentScore = reputation.score;
   const currentTier = reputation.tier.toLowerCase();
   
-  let nextTier = 'Max';
+  const tierNames = t('tierNames', { returnObjects: true }) as string[];
+
+  let nextTier = t('components.reputationWidget.maxTier');
   let nextThreshold = 100;
   
   if (currentTier === 'starter') {
-    nextTier = 'Bronze';
+    nextTier = tierNames[1] ?? 'Bronze';
     nextThreshold = 20;
   } else if (currentTier === 'bronze') {
-    nextTier = 'Silver';
+    nextTier = tierNames[2] ?? 'Silver';
     nextThreshold = 50;
   } else if (currentTier === 'silver') {
-    nextTier = 'Gold';
+    nextTier = tierNames[3] ?? 'Gold';
     nextThreshold = 80;
   } else if (currentTier === 'gold') {
-    nextTier = 'Top';
+    nextTier = t('components.reputationWidget.topTier');
     nextThreshold = 100;
   }
 
@@ -59,10 +63,10 @@ export function ReputationProgressWidget() {
           </View>
           <View>
             <Text className="text-base font-bold" style={{ color: colors.textPrimary }}>
-              Reputation
+              {t('components.reputationWidget.reputation')}
             </Text>
             <Text className="text-xs" style={{ color: colors.textMuted }}>
-              Your trust on StepFi
+              {t('components.reputationWidget.subtitle')}
             </Text>
           </View>
         </View>
@@ -75,7 +79,7 @@ export function ReputationProgressWidget() {
             {currentScore}
           </Text>
           <Text className="text-xs" style={{ color: colors.textMuted }}>
-            / {nextThreshold} to {nextTier}
+            {t('components.reputationWidget.progressTo', { threshold: nextThreshold, tier: nextTier })}
           </Text>
         </View>
         <View 
@@ -83,7 +87,7 @@ export function ReputationProgressWidget() {
           style={{ backgroundColor: colors.brandBlue + '10' }}
         >
           <Text className="text-[10px] font-bold uppercase tracking-wider" style={{ color: colors.brandBlue }}>
-            {reputation.tier} Tier
+            {(tierNames[['starter', 'bronze', 'silver', 'gold'].indexOf(currentTier)] ?? reputation.tier)} {t('components.reputationWidget.tier')}
           </Text>
         </View>
       </View>

@@ -20,9 +20,12 @@ import { useAuthStore } from '../../stores/auth.store';
 import { loansService } from '../../services/loans.service';
 import { reputationService } from '../../services/reputation.service';
 import { ReputationProgressWidget } from '../../components/reputation/ReputationProgressWidget';
+import { useTranslation } from '../../hooks/useTranslation';
+import { formatCurrency, formatDate } from '../../src/locales/i18n';
 import type { AvailableCredit } from '../../services/loans.service';
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const profile = useUserStore((s) => s.profile);
   const reputation = useUserStore((s) => s.reputation);
@@ -36,7 +39,7 @@ export default function HomeScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const displayName = profile?.displayName ?? 'there';
+  const displayName = profile?.displayName ?? t('home.greeting');
 
   const fetchDashboard = useCallback(async () => {
     setError(null);
@@ -51,7 +54,7 @@ export default function HomeScreen() {
       if (creditData.status === 'fulfilled') setCredit(creditData.value);
       if (repData.status === 'fulfilled' && repData.value) setReputation(repData.value);
     } catch {
-      setError('Could not load your dashboard. Please try again.');
+      setError(t('home.errorLoading'));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -82,11 +85,11 @@ export default function HomeScreen() {
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <EmptyState
           icon={AlertCircle}
-          title="Something went wrong"
-          message={error}
+          title={t('common.somethingWentWrong')}
+          message={error ?? ''}
           iconColor={colors.error}
           iconBackgroundColor={colors.errorDim}
-          action={{ label: 'Try again', onPress: () => { setIsLoading(true); void fetchDashboard(); } }}
+          action={{ label: t('common.tryAgain'), onPress: () => { setIsLoading(true); void fetchDashboard(); } }}
         />
       </SafeAreaView>
     );
@@ -121,7 +124,7 @@ export default function HomeScreen() {
           <View className="flex-row justify-between items-end">
             <View>
               <Text className="text-sm font-medium mb-1" style={{ color: colors.textSecondary }}>
-                Available Credit
+                {t('home.availableCredit')}
               </Text>
               <View className="flex-row items-end">
                 <Text className="text-4xl font-bold" style={{ color: colors.brandGreen }}>
@@ -137,7 +140,7 @@ export default function HomeScreen() {
               style={{ backgroundColor: colors.brandGreen + '15' }}
             >
               <Text className="text-[10px] font-bold uppercase tracking-widest" style={{ color: colors.brandGreen }}>
-                Active Limit
+                {t('home.activeLimit')}
               </Text>
             </View>
           </View>
@@ -146,10 +149,10 @@ export default function HomeScreen() {
           <View className="flex-col gap-1 mt-4">
             <View className="flex-row justify-between">
               <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>
-                Used: ${credit?.used?.toLocaleString() ?? '0'}
+                {t('home.used')}: ${credit?.used?.toLocaleString() ?? '0'}
               </Text>
               <Text className="text-xs font-semibold" style={{ color: colors.textMuted }}>
-                Limit: ${credit?.limit?.toLocaleString() ?? '0'}
+                {t('home.limit')}: ${credit?.limit?.toLocaleString() ?? '0'}
               </Text>
             </View>
             <View className="h-2 w-full rounded-full flex-row overflow-hidden" style={{ backgroundColor: colors.subtle }}>
@@ -166,10 +169,10 @@ export default function HomeScreen() {
         {/* Quick Actions Grid */}
         <View className="flex-row justify-between mb-8">
           {[
-            { icon: Plus, label: 'Apply', color: colors.brandGreen, route: '/(tabs)/pay' },
-            { icon: ArrowUpRight, label: 'Pay', color: colors.textPrimary, route: '/(tabs)/pay' },
-            { icon: History, label: 'History', color: colors.textPrimary, route: '/(tabs)/pay' },
-            { icon: BadgeCheck, label: 'Vouches', color: colors.textPrimary, route: '/(tabs)/reputation' },
+            { icon: Plus, label: t('home.apply'), color: colors.brandGreen, route: '/(tabs)/pay' },
+            { icon: ArrowUpRight, label: t('home.pay'), color: colors.textPrimary, route: '/(tabs)/pay' },
+            { icon: History, label: t('home.history'), color: colors.textPrimary, route: '/(tabs)/pay' },
+            { icon: BadgeCheck, label: t('home.vouches'), color: colors.textPrimary, route: '/(tabs)/reputation' },
           ].map((action, idx) => (
             <TouchableOpacity 
               key={idx} 
@@ -196,7 +199,7 @@ export default function HomeScreen() {
         {/* Active Loans Horizontal Scroll */}
         <View className="flex-col gap-3 mb-8">
           <Text className="text-xl font-bold" style={{ color: colors.textPrimary }}>
-            Active Loans
+            {t('home.activeLoans')}
           </Text>
           <ScrollView
             horizontal
@@ -223,7 +226,7 @@ export default function HomeScreen() {
                       )}
                     </View>
                     <Text className="text-base font-semibold" style={{ color: colors.textPrimary }}>
-                      Loan #{loan.id.slice(0, 4)}
+                      {t('common.loanNumber', { id: loan.id.slice(0, 4) })}
                     </Text>
                   </View>
                   <View
@@ -231,13 +234,13 @@ export default function HomeScreen() {
                     style={{ backgroundColor: colors.subtle, borderColor: colors.borderSubtle }}
                   >
                     <Text className="text-xs font-semibold" style={{ color: colors.brandGreen }}>
-                      Active
+                      {t('home.active')}
                     </Text>
                   </View>
                 </View>
                 <View>
                   <Text className="text-sm" style={{ color: colors.textSecondary }}>
-                    Remaining Balance
+                    {t('home.remainingBalance')}
                   </Text>
                   <View className="flex-row items-end gap-1">
                     <Text className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
@@ -259,7 +262,7 @@ export default function HomeScreen() {
                 className="w-[280px] rounded-xl border p-5 justify-center items-center"
                 style={{ backgroundColor: colors.surface, borderColor: colors.borderSubtle }}
               >
-                <Text style={{ color: colors.textSecondary }}>No active loans</Text>
+                <Text style={{ color: colors.textSecondary }}>{t('home.noActiveLoans')}</Text>
               </View>
             )}
           </ScrollView>
@@ -268,7 +271,7 @@ export default function HomeScreen() {
         {/* Upcoming Payments List */}
         <View className="flex-col gap-3">
           <Text className="text-xl font-bold" style={{ color: colors.textPrimary }}>
-            Upcoming Payments
+            {t('home.upcomingPayments')}
           </Text>
           <View
             className="rounded-xl overflow-hidden border"
@@ -293,10 +296,10 @@ export default function HomeScreen() {
                     </View>
                     <View>
                       <Text className="text-base font-semibold" style={{ color: colors.textPrimary }}>
-                        Installment
+                        {t('home.installment')}
                       </Text>
                       <Text className="text-sm" style={{ color: colors.textSecondary }}>
-                        Loan #{payment.loanId.slice(0, 4)} · Due {new Date(payment.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {t('common.loanNumber', { id: payment.loanId.slice(0, 4) })} · {t('home.due')} {formatDate(new Date(payment.dueDate), 'short')}
                       </Text>
                     </View>
                   </View>
@@ -306,7 +309,7 @@ export default function HomeScreen() {
                     </Text>
                     {idx === 0 ? (
                       <Text className="text-xs font-semibold mt-1" style={{ color: colors.brandGreen }}>
-                        Pay Now
+                        {t('home.payNow')}
                       </Text>
                     ) : null}
                   </View>
@@ -314,7 +317,7 @@ export default function HomeScreen() {
               ))
             ) : (
               <View className="p-6 items-center">
-                <Text style={{ color: colors.textSecondary }}>No upcoming payments</Text>
+                <Text style={{ color: colors.textSecondary }}>{t('home.noUpcomingPayments')}</Text>
               </View>
             )}
           </View>

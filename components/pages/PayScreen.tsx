@@ -1,10 +1,22 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRepayment } from '../../hooks/useRepayment';
+import { TransactionStatus } from '../../types/transaction.types';
 // Centralized color palette shared with Tailwind
 const colors = require('../../theme/colors.json');
 
 const PayScreen = () => {
+  const { status, txHash, error, repay, reset } = useRepayment();
+
+  const isProcessing =
+    status === TransactionStatus.SIGNING ||
+    status === TransactionStatus.BROADCASTING;
+
+  const handlePayNow = useCallback(() => {
+    void repay('placeholder-loan-id', 0, 50);
+  }, [repay]);
+
   return (
     <View className="px-6 pt-6">
       {/*Reputation Score Card*/}
@@ -71,11 +83,64 @@ const PayScreen = () => {
           <View className="h-2 w-1/3 rounded-full bg-primary" />
         </View>
 
-        <TouchableOpacity activeOpacity={0.8} className="items-center rounded-xl bg-cta py-4">
-          <View className="flex-row items-center gap-2">
-            <Text className="text-base font-semibold text-white">Pay now</Text>
-            <Ionicons name="arrow-forward" size={18} color="white" />
+        {/* Transaction Feedback */}
+        {status === TransactionStatus.ERROR && error && (
+          <View className="mb-3 rounded-xl bg-red-50 p-3">
+            <View className="flex-row items-start gap-2">
+              <Ionicons name="alert-circle" size={18} color="#DC2626" />
+              <View className="flex-1">
+                <Text className="text-sm font-semibold text-red-700">
+                  Payment failed
+                </Text>
+                <Text className="text-xs text-red-600 mt-1">{error.message}</Text>
+                <TouchableOpacity onPress={reset} className="mt-2">
+                  <Text className="text-xs font-semibold text-red-700 underline">
+                    Dismiss
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
+        )}
+
+        {status === TransactionStatus.SUCCESS && txHash && (
+          <View className="mb-3 rounded-xl bg-green-50 p-3">
+            <View className="flex-row items-start gap-2">
+              <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
+              <View className="flex-1">
+                <Text className="text-sm font-semibold text-green-700">
+                  Payment successful
+                </Text>
+                <Text className="text-xs text-green-600 mt-1 font-mono">
+                  TX: {txHash.slice(0, 16)}...
+                </Text>
+                <TouchableOpacity onPress={reset} className="mt-2">
+                  <Text className="text-xs font-semibold text-green-700 underline">
+                    Dismiss
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          className={`items-center rounded-xl py-4 ${isProcessing ? 'bg-cta' : 'bg-cta'}`}
+          onPress={handlePayNow}
+          disabled={isProcessing}
+        >
+          {isProcessing ? (
+            <View className="flex-row items-center gap-2">
+              <ActivityIndicator size="small" color="#FFFFFF" />
+              <Text className="text-base font-semibold text-white">Processing...</Text>
+            </View>
+          ) : (
+            <View className="flex-row items-center gap-2">
+              <Text className="text-base font-semibold text-white">Pay now</Text>
+              <Ionicons name="arrow-forward" size={18} color="white" />
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
