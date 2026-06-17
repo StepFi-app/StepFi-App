@@ -6,7 +6,18 @@ import { useAuthStore } from '../stores/auth.store';
 import { useSecurityStore } from '../src/security/security.store';
 import { biometricService } from '../src/security/biometric.service';
 import { BiometricGate } from '../src/components/BiometricGate';
+import { SentryErrorBoundary } from '../components/SentryErrorBoundary';
+import {
+  initSentry,
+  setSentryUser,
+  clearSentryUser,
+  addBreadcrumb,
+  Sentry,
+} from '../services/sentry';
 import '../global.css';
+
+// Initialise Sentry as early as possible (module‑level, before any component)
+initSentry();
 
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -29,7 +40,22 @@ function useAuthGuard() {
   }, [isAuthenticated, isLoading, segments, router]);
 }
 
-export default function RootLayout() {
+// Sentry user‑context sync — attach / clear wallet identity on auth changes
+function useSentryUserContext() {
+  const walletAddress = useAuthStore((s) => s.walletAddress);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated && walletAddress) {
+      setSentryUser(walletAddress);
+      addBreadcrumb('auth', 'User context set', { hasWallet: true });
+    } else {
+      clearSentryUser();
+    }
+  }, [isAuthenticated, walletAddress]);
+}
+
+function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -60,6 +86,7 @@ export default function RootLayout() {
   }, [hydrate]);
 
   useAuthGuard();
+  useSentryUserContext();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !biometricCheckDone) {
@@ -78,6 +105,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
+      addBreadcrumb('app.lifecycle', `AppState → ${state}`);
+
       if (state === 'active') {
         const elapsed = Date.now() - lastActiveRef.current;
         if (
@@ -109,24 +138,28 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      {isLocked && isAuthenticated ? (
-        <BiometricGate />
-      ) : (
-        <View
-          style={{ flex: 1 }}
-          onTouchStart={() => {
-            if (!useSecurityStore.getState().isLocked) {
-              startIdleTimer();
-            }
-          }}
-        >
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-        </View>
-      )}
-    </SafeAreaProvider>
+    <SentryErrorBoundary>
+      <SafeAreaProvider>
+        {isLocked && isAuthenticated ? (
+          <BiometricGate />
+        ) : (
+          <View
+            style={{ flex: 1 }}
+            onTouchStart={() => {
+              if (!useSecurityStore.getState().isLocked) {
+                startIdleTimer();
+              }
+            }}
+          >
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+          </View>
+        )}
+      </SafeAreaProvider>
+    </SentryErrorBoundary>
   );
 }
+
+export default Sentry.wrap(RootLayout);
