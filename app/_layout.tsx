@@ -1,11 +1,12 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/auth.store';
 import { useSecurityStore } from '../src/security/security.store';
 import { biometricService } from '../src/security/biometric.service';
 import { BiometricGate } from '../src/components/BiometricGate';
+import { initPromise } from '../src/locales/i18n';
 import '../global.css';
 
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
@@ -30,6 +31,7 @@ function useAuthGuard() {
 }
 
 export default function RootLayout() {
+  const [i18nReady, setI18nReady] = useState(false);
   const hydrate = useAuthStore((s) => s.hydrate);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -57,6 +59,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     void hydrate();
+    initPromise.then(() => setI18nReady(true));
   }, [hydrate]);
 
   useAuthGuard();
@@ -104,7 +107,7 @@ export default function RootLayout() {
     }
   }, [isLocked, isAuthenticated, startIdleTimer]);
 
-  if (isLoading) {
+  if (isLoading || !i18nReady) {
     return null;
   }
 

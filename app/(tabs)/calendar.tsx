@@ -13,13 +13,11 @@ import {
 } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { EmptyState } from '../../components/shared/EmptyState';
-import { Loader } from '../../components/shared/Loader';
-import { useInstallmentCalendar, WEEKDAY_HEADERS, MONTH_NAMES } from '../../hooks/useInstallmentCalendar';
+import Loader from '../../components/shared/Loader';
+import { useInstallmentCalendar } from '../../hooks/useInstallmentCalendar';
+import { useTranslation } from '../../hooks/useTranslation';
+import { formatCurrency, formatDate } from '../../src/locales/i18n';
 import type { CalendarDayData, CalendarEventData } from '../../hooks/useInstallmentCalendar';
-
-function formatCurrency(amount: number) {
-  return `$${amount.toLocaleString()}`;
-}
 
 function EventIndicator({ events }: { events: CalendarEventData[] }) {
   if (!events.length) return null;
@@ -89,16 +87,16 @@ function DayCell({
   );
 }
 
-function SelectedDayPanel({ day }: { day: CalendarDayData }) {
+function SelectedDayPanel({ day, t }: { day: CalendarDayData; t: (key: string, opts?: any) => string }) {
   if (!day.events.length) {
     return (
       <View
         className="rounded-2xl p-5 items-center"
         style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
       >
-        <Text className="text-sm" style={{ color: colors.textMuted }}>
-          No payments on this day
-        </Text>
+          <Text className="text-sm" style={{ color: colors.textMuted }}>
+            {t('calendar.noPaymentsOnDay')}
+          </Text>
       </View>
     );
   }
@@ -109,16 +107,12 @@ function SelectedDayPanel({ day }: { day: CalendarDayData }) {
       style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
     >
       <View className="p-4 border-b" style={{ borderBottomColor: colors.border }}>
-        <Text className="text-sm font-semibold" style={{ color: colors.textSecondary }}>
-          {day.date.toLocaleDateString('en-US', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </Text>
-        <Text className="text-xs" style={{ color: colors.textMuted }}>
-          {day.events.length} payment{day.events.length > 1 ? 's' : ''}
-        </Text>
+          <Text className="text-sm font-semibold" style={{ color: colors.textSecondary }}>
+            {formatDate(day.date, 'long')}
+          </Text>
+          <Text className="text-xs" style={{ color: colors.textMuted }}>
+            {day.events.length} {day.events.length > 1 ? t('calendar.payments') : t('calendar.payment')}
+          </Text>
       </View>
       {day.events.map((event, idx) => (
         <View
@@ -155,7 +149,7 @@ function SelectedDayPanel({ day }: { day: CalendarDayData }) {
             className="text-xs font-semibold"
             style={{ color: event.isPaid ? colors.success : colors.warning }}
           >
-            {event.isPaid ? 'Paid' : 'Due'}
+            {event.isPaid ? t('calendar.eventPaid') : t('calendar.eventDue')}
           </Text>
         </View>
       ))}
@@ -164,6 +158,9 @@ function SelectedDayPanel({ day }: { day: CalendarDayData }) {
 }
 
 export default function CalendarScreen() {
+  const { t } = useTranslation();
+  const weekdayHeaders = t('weekdayHeaders', { returnObjects: true }) as string[];
+  const monthNames = t('monthNames', { returnObjects: true }) as string[];
   const {
     currentMonth,
     weeks,
@@ -192,16 +189,16 @@ export default function CalendarScreen() {
   const handleExport = React.useCallback(async () => {
     const success = await exportToCalendar();
     if (success) {
-      Alert.alert('Calendar Exported', 'Payment dates have been added to your calendar.');
+      Alert.alert(t('calendar.calendarExported'), t('calendar.calendarExportedMessage'));
     } else {
-      Alert.alert('Permission Required', 'Calendar access was not granted. Please enable it in settings.');
+      Alert.alert(t('calendar.permissionRequired'), t('calendar.permissionRequiredMessage'));
     }
-  }, [exportToCalendar]);
+  }, [exportToCalendar, t]);
 
   const handleScheduleReminders = React.useCallback(async () => {
     await scheduleReminders();
-    Alert.alert('Reminders Set', 'Payment reminders have been scheduled 14, 7, 3, and 1 day before each due date.');
-  }, [scheduleReminders]);
+    Alert.alert(t('calendar.remindersSet'), t('calendar.remindersSetMessage'));
+  }, [scheduleReminders, t]);
 
   if (isLoading) {
     return (
@@ -216,11 +213,11 @@ export default function CalendarScreen() {
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <EmptyState
           icon={AlertCircle}
-          title="Something went wrong"
-          message={error}
+          title={t('common.somethingWentWrong')}
+          message={error ?? ''}
           iconColor={colors.error}
           iconBackgroundColor={colors.errorDim}
-          action={{ label: 'Try again', onPress: () => { void refetch(); } }}
+          action={{ label: t('common.tryAgain'), onPress: () => { void refetch(); } }}
         />
       </SafeAreaView>
     );
@@ -231,14 +228,14 @@ export default function CalendarScreen() {
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <EmptyState
           icon={CalendarIcon}
-          title="No payments scheduled"
-          message="Your active loans will appear here with their payment due dates."
+          title={t('calendar.noPaymentsScheduled')}
+          message={t('calendar.noPaymentsMessage')}
         />
       </SafeAreaView>
     );
   }
 
-  const monthYear = `${MONTH_NAMES[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
+  const monthYear = `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
   const totalDue = allEvents.filter((e) => !e.isPaid).length;
   const totalPaid = allEvents.filter((e) => e.isPaid).length;
 
@@ -254,7 +251,7 @@ export default function CalendarScreen() {
         {/* Header */}
         <View className="px-4 pt-4 pb-2 flex-row items-center justify-between">
           <Text className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
-            Calendar
+            {t('calendar.calendar')}
           </Text>
           <View className="flex-row gap-2">
             <TouchableOpacity
@@ -291,10 +288,10 @@ export default function CalendarScreen() {
               </View>
               <View>
                 <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
-                  Payment Streak
+                  {t('calendar.paymentStreak')}
                 </Text>
                 <Text className="text-xs" style={{ color: colors.textMuted }}>
-                  Consecutive on-time payments
+                  {t('calendar.paymentStreakDesc')}
                 </Text>
               </View>
             </View>
@@ -311,7 +308,7 @@ export default function CalendarScreen() {
             style={{ backgroundColor: colors.warningDim }}
           >
             <Text className="text-xs" style={{ color: colors.warning }}>
-              Due
+              {t('calendar.due')}
             </Text>
             <Text className="text-lg font-bold" style={{ color: colors.warning }}>
               {totalDue}
@@ -322,7 +319,7 @@ export default function CalendarScreen() {
             style={{ backgroundColor: colors.successDim }}
           >
             <Text className="text-xs" style={{ color: colors.success }}>
-              Paid
+              {t('calendar.paid')}
             </Text>
             <Text className="text-lg font-bold" style={{ color: colors.success }}>
               {totalPaid}
@@ -362,7 +359,7 @@ export default function CalendarScreen() {
 
           {/* Weekday Headers */}
           <View className="flex-row mb-2">
-            {WEEKDAY_HEADERS.map((day) => (
+            {weekdayHeaders.map((day) => (
               <View key={day} className="flex-1 items-center">
                 <Text className="text-xs font-semibold" style={{ color: colors.textMuted }}>
                   {day}
@@ -393,7 +390,7 @@ export default function CalendarScreen() {
         {/* Selected Day Details */}
         {selectedDay ? (
           <View className="mx-4 mt-4">
-            <SelectedDayPanel day={selectedDay} />
+            <SelectedDayPanel day={selectedDay} t={t} />
           </View>
         ) : null}
       </ScrollView>

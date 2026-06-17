@@ -26,6 +26,7 @@ import { useAuthStore } from '../../stores/auth.store';
 import { reputationService } from '../../services/reputation.service';
 import { useReputationMilestones } from '../../hooks/useReputationMilestones';
 import { useVouch } from '../../hooks/useVouch';
+import { useTranslation } from '../../hooks/useTranslation';
 import { TransactionStatus } from '../../types/transaction.types';
 import { TierUpModal } from '../../components/reputation/TierUpModal';
 import { MilestoneModal } from '../../components/reputation/MilestoneModal';
@@ -34,43 +35,21 @@ interface TipItem {
   icon: typeof CheckCircle;
   text: string;
   color: string;
+  key: string;
 }
 
-const IMPROVEMENT_TIPS: TipItem[] = [
-  {
-    icon: CheckCircle,
-    text: 'Pay installments on time to increase your score',
-    color: colors.success,
-  },
-  {
-    icon: Clock,
-    text: 'Avoid late payments — each one reduces your score',
-    color: colors.warning,
-  },
-  {
-    icon: Shield,
-    text: 'Get vouched by a mentor to boost your credit limit',
-    color: colors.brandBlue,
-  },
-  {
-    icon: TrendingUp,
-    text: 'Complete more loans to build a strong payment history',
-    color: colors.brandGreen,
-  },
-];
-
-function getTierDescription(tier: string): string {
+function getTierDescription(tier: string, t: (key: string, opts?: any) => string): string {
   switch (tier.toLowerCase()) {
     case 'gold':
-      return 'Excellent trust — lowest interest rates and highest credit limits.';
+      return t('reputation.descGold');
     case 'silver':
-      return 'Good trust — competitive rates and solid credit limits.';
+      return t('reputation.descSilver');
     case 'bronze':
-      return 'Growing trust — moderate rates. Keep paying on time!';
+      return t('reputation.descBronze');
     case 'starter':
-      return 'Just getting started — build trust with your first loan.';
+      return t('reputation.descStarter');
     default:
-      return 'Build your trust score by using StepFi.';
+      return t('reputation.descDefault');
   }
 }
 
@@ -100,12 +79,20 @@ const AnimatedScore = ({ score }: { score: number }) => {
 };
 
 export default function ReputationScreen() {
+  const { t } = useTranslation();
   const reputation = useUserStore((s) => s.reputation);
   const setReputation = useUserStore((s) => s.setReputation);
   const walletAddress = useAuthStore((s) => s.walletAddress);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const IMPROVEMENT_TIPS: TipItem[] = [
+    { icon: CheckCircle, text: t('reputation.tip1'), color: colors.success, key: 'tip1' },
+    { icon: Clock, text: t('reputation.tip2'), color: colors.warning, key: 'tip2' },
+    { icon: Shield, text: t('reputation.tip3'), color: colors.brandBlue, key: 'tip3' },
+    { icon: TrendingUp, text: t('reputation.tip4'), color: colors.brandGreen, key: 'tip4' },
+  ];
 
   const {
     showTierUp,
@@ -146,7 +133,7 @@ export default function ReputationScreen() {
       const data = await reputationService.getScore(walletAddress);
       setReputation(data);
     } catch {
-      setError('Could not load your reputation score. Please try again.');
+      setError(t('common.somethingWentWrong'));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -168,11 +155,11 @@ export default function ReputationScreen() {
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <EmptyState
           icon={AlertCircle}
-          title="Something went wrong"
-          message={error}
+          title={t('common.somethingWentWrong')}
+          message={error ?? ''}
           iconColor={colors.error}
           iconBackgroundColor={colors.errorDim}
-          action={{ label: 'Try again', onPress: () => { setIsLoading(true); void fetchReputation(); } }}
+          action={{ label: t('common.tryAgain'), onPress: () => { setIsLoading(true); void fetchReputation(); } }}
         />
       </SafeAreaView>
     );
@@ -184,8 +171,8 @@ export default function ReputationScreen() {
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <EmptyState
           icon={Star}
-          title="No reputation data"
-          message="Your trust score will appear here after your first loan activity."
+          title={t('reputation.noReputationData')}
+          message={t('reputation.noReputationMessage')}
           iconColor={colors.tier.gold}
           iconBackgroundColor={colors.warningDim}
         />
@@ -217,7 +204,7 @@ export default function ReputationScreen() {
           className="text-2xl font-bold mt-2 mb-6"
           style={{ color: colors.textPrimary }}
         >
-          Reputation Score
+          {t('reputation.reputationScore')}
         </Text>
 
         {/* Main score card */}
@@ -233,7 +220,7 @@ export default function ReputationScreen() {
           >
             <AnimatedScore score={reputation?.score ?? 0} />
             <Text className="text-xs" style={{ color: colors.textMuted }}>
-              / 100
+              {t('reputation.scoreOutOf')}
             </Text>
           </View>
 
@@ -246,7 +233,7 @@ export default function ReputationScreen() {
               className="text-sm font-semibold capitalize"
               style={{ color: tierColor }}
             >
-              {reputation?.tier ?? 'Starter'} Tier
+              {reputation?.tier ?? t('reputation.tierStarter')} {t('reputation.tier')}
             </Text>
           </View>
 
@@ -255,7 +242,7 @@ export default function ReputationScreen() {
             className="text-sm text-center leading-5"
             style={{ color: colors.textMuted }}
           >
-            {getTierDescription(reputation?.tier ?? 'starter')}
+            {getTierDescription(reputation?.tier ?? 'starter', t)}
           </Text>
 
           {/* Score progress bar */}
@@ -287,7 +274,7 @@ export default function ReputationScreen() {
         <View className="flex-row gap-3 mb-4">
           <Card className="flex-1 p-4 items-center gap-1">
             <Text className="text-xs" style={{ color: colors.textMuted }}>
-              Interest rate
+              {t('reputation.interestRate')}
             </Text>
             <Text
               className="text-xl font-bold"
@@ -298,13 +285,13 @@ export default function ReputationScreen() {
             <View className="flex-row items-center gap-1 mt-1">
               <Info size={10} color={colors.textFaint} />
               <Text className="text-xs" style={{ color: colors.textFaint }}>
-                Based on your tier
+                {t('reputation.basedOnTier')}
               </Text>
             </View>
           </Card>
           <Card className="flex-1 p-4 items-center gap-1">
             <Text className="text-xs" style={{ color: colors.textMuted }}>
-              Max credit
+              {t('reputation.maxCredit')}
             </Text>
             <Text
               className="text-xl font-bold"
@@ -315,7 +302,7 @@ export default function ReputationScreen() {
             <View className="flex-row items-center gap-1 mt-1">
               <Info size={10} color={colors.textFaint} />
               <Text className="text-xs" style={{ color: colors.textFaint }}>
-                Your credit limit
+                {t('reputation.yourCreditLimit')}
               </Text>
             </View>
           </Card>
@@ -326,12 +313,12 @@ export default function ReputationScreen() {
           className="text-lg font-semibold mt-2 mb-3"
           style={{ color: colors.textPrimary }}
         >
-          How to improve your score
+          {t('reputation.howToImprove')}
         </Text>
 
         <Card className="p-4 gap-4">
           {IMPROVEMENT_TIPS.map((tip) => (
-            <View key={tip.text} className="flex-row items-start gap-3">
+            <View key={tip.key} className="flex-row items-start gap-3">
               <View
                 className="h-8 w-8 rounded-full items-center justify-center mt-0.5"
                 style={{ backgroundColor: tip.color + '20' }}
@@ -353,7 +340,7 @@ export default function ReputationScreen() {
           className="text-lg font-semibold mt-6 mb-3"
           style={{ color: colors.textPrimary }}
         >
-          Get Vouched
+          {t('reputation.getVouched')}
         </Text>
         <Card className="p-4 gap-3">
           <View className="flex-row items-start gap-3">
@@ -364,7 +351,7 @@ export default function ReputationScreen() {
               <UserCheck size={16} color={colors.brandBlue} />
             </View>
             <Text className="text-sm flex-1 leading-5" style={{ color: colors.textSecondary }}>
-              Get vouched by a mentor to increase your credit limit by 10% per vouch (max 3 vouches).
+              {t('reputation.vouchDescription')}
             </Text>
           </View>
 
@@ -373,10 +360,10 @@ export default function ReputationScreen() {
               <View className="flex-row items-start gap-2">
                 <AlertCircle size={16} color="#DC2626" />
                 <View className="flex-1">
-                  <Text className="text-xs font-semibold text-red-700">Vouch failed</Text>
+                  <Text className="text-xs font-semibold text-red-700">{t('reputation.vouchFailed')}</Text>
                   <Text className="text-xs text-red-600 mt-0.5">{vouchError.message}</Text>
                   <TouchableOpacity onPress={resetVouch} className="mt-1">
-                    <Text className="text-xs font-semibold text-red-700 underline">Dismiss</Text>
+                    <Text className="text-xs font-semibold text-red-700 underline">{t('common.dismiss')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -388,12 +375,12 @@ export default function ReputationScreen() {
               <View className="flex-row items-start gap-2">
                 <CheckCircle size={16} color="#16A34A" />
                 <View className="flex-1">
-                  <Text className="text-xs font-semibold text-green-700">Vouch submitted</Text>
+                  <Text className="text-xs font-semibold text-green-700">{t('reputation.vouchSubmitted')}</Text>
                   <Text className="text-xs text-green-600 mt-0.5 font-mono">
-                    TX: {vouchTxHash.slice(0, 16)}...
+                    {t('reputation.txLabel')} {vouchTxHash.slice(0, 16)}...
                   </Text>
                   <TouchableOpacity onPress={resetVouch} className="mt-1">
-                    <Text className="text-xs font-semibold text-green-700 underline">Dismiss</Text>
+                    <Text className="text-xs font-semibold text-green-700 underline">{t('common.dismiss')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -408,10 +395,10 @@ export default function ReputationScreen() {
             {isVouching ? (
               <View className="flex-row items-center gap-2">
                 <ActivityIndicator size="small" color="#FFFFFF" />
-                <Text className="text-sm font-semibold text-white">Submitting vouch...</Text>
+                <Text className="text-sm font-semibold text-white">{t('reputation.submittingVouch')}</Text>
               </View>
             ) : (
-              <Text className="text-sm font-semibold text-white">Request Vouch</Text>
+              <Text className="text-sm font-semibold text-white">{t('reputation.requestVouch')}</Text>
             )}
           </TouchableOpacity>
         </Card>
