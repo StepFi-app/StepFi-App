@@ -10,6 +10,7 @@ interface WalletState {
   setDisconnected: () => void;
   setSigning: (signing: boolean) => void;
   setStatus: (status: WalletConnectionStatus) => void;
+  signXdr: (unsignedXdr: string) => Promise<string>;
 }
 
 export const useWalletStore = create<WalletState>((set) => ({
@@ -27,4 +28,11 @@ export const useWalletStore = create<WalletState>((set) => ({
   setSigning: (isSigning) => set({ isSigning }),
 
   setStatus: (status) => set({ status }),
+
+  signXdr: async (_unsignedXdr: string) => {
+    throw new Error(
+      'WalletConnect signing is not yet configured. ' +
+      'Please implement WalletConnect v2 integration to sign transactions.',
+    );
+  },
 }));

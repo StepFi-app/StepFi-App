@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { 
   useSharedValue, 
@@ -16,6 +16,7 @@ import {
   Clock,
   CheckCircle,
   Info,
+  UserCheck,
 } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { Card } from '../../components/shared/Card';
@@ -24,6 +25,8 @@ import { useUserStore } from '../../stores/user.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { reputationService } from '../../services/reputation.service';
 import { useReputationMilestones } from '../../hooks/useReputationMilestones';
+import { useVouch } from '../../hooks/useVouch';
+import { TransactionStatus } from '../../types/transaction.types';
 import { TierUpModal } from '../../components/reputation/TierUpModal';
 import { MilestoneModal } from '../../components/reputation/MilestoneModal';
 
@@ -112,6 +115,26 @@ export default function ReputationScreen() {
     milestoneType,
     closeMilestone,
   } = useReputationMilestones();
+
+  const {
+    status: vouchStatus,
+    txHash: vouchTxHash,
+    error: vouchError,
+    submitVouch,
+    reset: resetVouch,
+  } = useVouch();
+
+  const isVouching =
+    vouchStatus === TransactionStatus.SIGNING ||
+    vouchStatus === TransactionStatus.BROADCASTING;
+
+  const handleVouch = useCallback(() => {
+    void submitVouch({
+      mentorWallet: walletAddress ?? '',
+      learnerWallet: walletAddress ?? '',
+      amount: 100,
+    });
+  }, [walletAddress, submitVouch]);
 
   const fetchReputation = useCallback(async () => {
     if (!walletAddress) {
@@ -323,6 +346,74 @@ export default function ReputationScreen() {
               </Text>
             </View>
           ))}
+        </Card>
+
+        {/* Vouch Section */}
+        <Text
+          className="text-lg font-semibold mt-6 mb-3"
+          style={{ color: colors.textPrimary }}
+        >
+          Get Vouched
+        </Text>
+        <Card className="p-4 gap-3">
+          <View className="flex-row items-start gap-3">
+            <View
+              className="h-8 w-8 rounded-full items-center justify-center mt-0.5"
+              style={{ backgroundColor: colors.brandBlue + '20' }}
+            >
+              <UserCheck size={16} color={colors.brandBlue} />
+            </View>
+            <Text className="text-sm flex-1 leading-5" style={{ color: colors.textSecondary }}>
+              Get vouched by a mentor to increase your credit limit by 10% per vouch (max 3 vouches).
+            </Text>
+          </View>
+
+          {vouchStatus === TransactionStatus.ERROR && vouchError && (
+            <View className="rounded-xl bg-red-50 p-3">
+              <View className="flex-row items-start gap-2">
+                <AlertCircle size={16} color="#DC2626" />
+                <View className="flex-1">
+                  <Text className="text-xs font-semibold text-red-700">Vouch failed</Text>
+                  <Text className="text-xs text-red-600 mt-0.5">{vouchError.message}</Text>
+                  <TouchableOpacity onPress={resetVouch} className="mt-1">
+                    <Text className="text-xs font-semibold text-red-700 underline">Dismiss</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {vouchStatus === TransactionStatus.SUCCESS && vouchTxHash && (
+            <View className="rounded-xl bg-green-50 p-3">
+              <View className="flex-row items-start gap-2">
+                <CheckCircle size={16} color="#16A34A" />
+                <View className="flex-1">
+                  <Text className="text-xs font-semibold text-green-700">Vouch submitted</Text>
+                  <Text className="text-xs text-green-600 mt-0.5 font-mono">
+                    TX: {vouchTxHash.slice(0, 16)}...
+                  </Text>
+                  <TouchableOpacity onPress={resetVouch} className="mt-1">
+                    <Text className="text-xs font-semibold text-green-700 underline">Dismiss</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
+
+          <TouchableOpacity
+            className={`items-center rounded-xl py-3 ${isVouching ? 'bg-cta' : 'bg-ctaStrong'}`}
+            onPress={handleVouch}
+            disabled={isVouching}
+          >
+            {isVouching ? (
+              <View className="flex-row items-center gap-2">
+                <ActivityIndicator size="small" color="#FFFFFF" />
+                <Text className="text-sm font-semibold text-white">Submitting vouch...</Text>
+              </View>
+            ) : (
+              <Text className="text-sm font-semibold text-white">Request Vouch</Text>
+            )}
+          </TouchableOpacity>
         </Card>
       </ScrollView>
 
