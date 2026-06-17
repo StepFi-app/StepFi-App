@@ -1,11 +1,15 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import NetInfo from '@react-native-community/netinfo';
 import { useAuthStore } from '../stores/auth.store';
 import { useSecurityStore } from '../src/security/security.store';
 import { biometricService } from '../src/security/biometric.service';
 import { BiometricGate } from '../src/components/BiometricGate';
+import { useConnectivityStore } from '../src/offline/connectivity.store';
+import { processQueue } from '../src/offline/offline-sync';
+import { initPromise } from '../src/locales/i18n';
 import { SentryErrorBoundary } from '../components/SentryErrorBoundary';
 import {
   initSentry,
@@ -56,6 +60,7 @@ function useSentryUserContext() {
 }
 
 function RootLayout() {
+  const [i18nReady, setI18nReady] = useState(false);
   const hydrate = useAuthStore((s) => s.hydrate);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -83,6 +88,7 @@ function RootLayout() {
 
   useEffect(() => {
     void hydrate();
+    initPromise.then(() => setI18nReady(true));
   }, [hydrate]);
 
   useAuthGuard();
@@ -133,7 +139,32 @@ function RootLayout() {
     }
   }, [isLocked, isAuthenticated, startIdleTimer]);
 
-  if (isLoading) {
+  const prevConnectedRef = useRef(true);
+
+  useEffect(() => {
+    NetInfo.fetch().then((state) => {
+      useConnectivityStore.getState().setConnected(state.isConnected ?? false);
+      useConnectivityStore.getState().setConnectionType(state.type);
+      useConnectivityStore.getState().setInternetReachable(state.isInternetReachable);
+      prevConnectedRef.current = state.isConnected ?? false;
+    });
+
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const connected = state.isConnected ?? false;
+      useConnectivityStore.getState().setConnected(connected);
+      useConnectivityStore.getState().setConnectionType(state.type);
+      useConnectivityStore.getState().setInternetReachable(state.isInternetReachable);
+
+      if (!prevConnectedRef.current && connected) {
+        processQueue().catch(() => {});
+      }
+      prevConnectedRef.current = connected;
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (isLoading || !i18nReady) {
     return null;
   }
 
