@@ -208,6 +208,26 @@
       "notConnected": "Not connected",
       "saving": "Saving...",
       "continue": "Continue"
+    },
+    "onboarding": {
+      "title": "Complete your profile",
+      "step1Title": "Program Details",
+      "step1Subtitle": "Tell us more about your current program.",
+      "step2Title": "Financial Information",
+      "step2Subtitle": "This helps us calculate your initial credit limit.",
+      "step3Title": "Location",
+      "step3Subtitle": "Where are you currently located?",
+      "step4Title": "Ready to go!",
+      "step4Subtitle": "Your profile is complete. You can now explore StepFi.",
+      "programType": "Program Type",
+      "programTypePlaceholder": "e.g. Full-time, Bootcamp, Online",
+      "monthlyIncome": "Monthly Income (USD)",
+      "monthlyIncomePlaceholder": "e.g. 500",
+      "country": "Country",
+      "countryPlaceholder": "e.g. Nigeria",
+      "city": "City",
+      "cityPlaceholder": "e.g. Lagos",
+      "finish": "Go to Dashboard"
     }
   },
   "components": {

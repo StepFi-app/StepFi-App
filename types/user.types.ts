@@ -13,4 +13,5 @@ export interface LearnerProfile {
   city?: string;
   organization?: string;
   investmentFocus?: string;
+  onboardingComplete?: boolean;
 }
