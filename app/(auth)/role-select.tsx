@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { GraduationCap, TrendingUp, ChevronRight, ChevronLeft } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { useUserStore } from '../../stores/user.store';
+import { useTranslation } from '../../hooks/useTranslation';
 import type { UserRole } from '../../types/user.types';
 
 interface RolePillProps {
@@ -99,6 +100,7 @@ function RoleCard({
 }
 
 export default function RoleSelectScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const setRole = useUserStore((s) => s.setRole);
 
@@ -128,13 +130,13 @@ export default function RoleSelectScreen() {
             className="text-[32px] font-bold"
             style={{ color: colors.textPrimary }}
           >
-            How will you use StepFi?
+            {t('auth.roleSelect.title')}
           </Text>
           <Text
             className="text-[16px]"
             style={{ color: colors.textSecondary }}
           >
-            Choose your role. You can switch anytime in settings.
+            {t('auth.roleSelect.subtitle')}
           </Text>
         </View>
 
@@ -142,9 +144,9 @@ export default function RoleSelectScreen() {
         <View className="flex-col gap-3">
           <RoleCard
             role="learner"
-            title="I'm a Learner"
-            subtitle="Finance laptops, courses, and dev tools. Build your reputation with every payment."
-            pills={['Borrow', 'Repay', 'Build Credit']}
+            title={t('auth.roleSelect.learnerTitle')}
+            subtitle={t('auth.roleSelect.learnerSubtitle')}
+            pills={[t('auth.roleSelect.learnerPill1'), t('auth.roleSelect.learnerPill2'), t('auth.roleSelect.learnerPill3')]}
             icon={GraduationCap}
             iconColor={colors.brandBlue}
             iconBg={colors.brandBlueDim}
@@ -154,9 +156,9 @@ export default function RoleSelectScreen() {
 
           <RoleCard
             role="sponsor"
-            title="I'm a Sponsor"
-            subtitle="Fund the learner lending pool. Earn yield while supporting the next generation of developers."
-            pills={['Deposit', 'Earn Yield', 'Support Learners']}
+            title={t('auth.roleSelect.sponsorTitle')}
+            subtitle={t('auth.roleSelect.sponsorSubtitle')}
+            pills={[t('auth.roleSelect.sponsorPill1'), t('auth.roleSelect.sponsorPill2'), t('auth.roleSelect.sponsorPill3')]}
             icon={TrendingUp}
             iconColor={colors.brandGreen}
             iconBg={colors.brandGreenDim}

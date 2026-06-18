@@ -60,7 +60,7 @@ Build all shared components from scratch using StepFi's dark theme design system
 
 ## In Progress
 
-- None currently. Shared components are next.
+- None currently.
 
 ---
 
@@ -87,7 +87,16 @@ Build all shared components from scratch using StepFi's dark theme design system
 16. app/loan/apply.tsx
 
 ### Wallet Integration
-17. WalletConnect v2 — Lobstr and xBull deep link integration
+17. WalletConnect v2 session management: ✅ Completed (Jun 2026)
+    - `services/wallet.service.ts` — SignClient init, session events, health check (60s ping), SecureStore persistence, session recovery
+    - `stores/wallet.store.ts` — Multi-wallet session tracking, active wallet switching, event log, reconnect state
+    - `hooks/useWallet.ts` — React hook with connect/disconnect/switch/sign/recovery, deep link support
+    - `components/wallet/SessionStatus.tsx` — Connection status, health indicator, expire timer, multi-wallet switcher, recovery button
+    - `types/wallet.types.ts` — Enhanced types (WalletSessionInfo, StoredSession, WalletEvent, WalletConnectionStatus)
+    - `constants/config.ts` — Added `WC_PROJECT_ID` from env
+    - `app/_layout.tsx` — Wallet service initialization on boot
+    - Dependencies: `@walletconnect/sign-client`, `@walletconnect/types`
+    - `npx expo export --platform web` — succeeded (3668 modules bundled, exit 0)
 
 ### Deployment
 18. Expo preview build (EAS)
