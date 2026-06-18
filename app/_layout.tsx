@@ -4,6 +4,7 @@ import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import NetInfo from '@react-native-community/netinfo';
 import { useAuthStore } from '../stores/auth.store';
+import { useUserStore } from '../stores/user.store';
 import { useSecurityStore } from '../src/security/security.store';
 import { biometricService } from '../src/security/biometric.service';
 import { BiometricGate } from '../src/components/BiometricGate';
@@ -19,18 +20,24 @@ function useAuthGuard() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const { onboardingComplete, role } = useUserStore();
 
   useEffect(() => {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const isOnboarding = segments[segments.length - 1] === 'onboarding';
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/sign-in');
-    } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/(tabs)');
+    } else if (isAuthenticated) {
+      if (role === 'learner' && !onboardingComplete && !isOnboarding) {
+        router.replace('/(auth)/onboarding');
+      } else if ((onboardingComplete || role === 'sponsor' || role === null) && (inAuthGroup || isOnboarding)) {
+        router.replace('/(tabs)');
+      }
     }
-  }, [isAuthenticated, isLoading, segments, router]);
+  }, [isAuthenticated, isLoading, segments, router, onboardingComplete, role]);
 }
 
 export default function RootLayout() {
@@ -62,6 +69,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     void hydrate();
+    void useUserStore.getState().hydrate();
     initPromise.then(() => setI18nReady(true));
   }, [hydrate]);
 
