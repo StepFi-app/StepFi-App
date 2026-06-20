@@ -1,126 +1,226 @@
 import { create } from 'zustand';
-import type { WalletConnectionStatus, WalletSessionInfo, WalletEvent } from '../types/wallet.types';
+import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+import { walletService } from '../services/wallet.service';
+
+const STORAGE_KEY = 'stepfi.wallet';
+
+interface StoredWalletState {
+  address: string | null;
+  sessionId: string | null;
+  walletType: 'freighter' | 'lobstr' | null;
+}
 
 interface WalletState {
+  address: string | null;
+  sessionId: string | null;
+  walletType: 'freighter' | 'lobstr' | null;
   isConnected: boolean;
-  publicKey: string | null;
-  status: WalletConnectionStatus;
+  isConnecting: boolean;
   isSigning: boolean;
-  sessions: WalletSessionInfo[];
-  activeTopic: string | null;
-  events: WalletEvent[];
+  error: string | null;
   pairingUri: string | null;
-  needsReconnect: boolean;
 
-  setConnected: (publicKey: string) => void;
-  setDisconnected: () => void;
-  setSigning: (signing: boolean) => void;
-  setStatus: (status: WalletConnectionStatus) => void;
-  setPairingUri: (uri: string | null) => void;
-
-  addSession: (session: WalletSessionInfo) => void;
-  removeSession: (topic: string) => void;
-  setSessionHealth: (topic: string, healthy: boolean) => void;
-  setActiveTopic: (topic: string) => void;
-  switchWallet: (topic: string) => void;
-
-  addEvent: (event: WalletEvent) => void;
-  clearEvents: () => void;
-
-  setNeedsReconnect: (needs: boolean) => void;
-
-  signXdr: (unsignedXdr: string) => Promise<string>;
+  connectFreighter: () => Promise<void>;
+  initLobstrConnection: () => Promise<string>;
+  completeLobstrConnection: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  signXdr: (xdr: string) => Promise<string>;
+  hydrate: () => Promise<void>;
+  clearError: () => void;
 }
 
 export const useWalletStore = create<WalletState>((set, get) => ({
+  address: null,
+  sessionId: null,
+  walletType: null,
   isConnected: false,
-  publicKey: null,
-  status: 'disconnected',
+  isConnecting: false,
   isSigning: false,
-  sessions: [],
-  activeTopic: null,
-  events: [],
+  error: null,
   pairingUri: null,
-  needsReconnect: false,
 
-  setConnected: (publicKey) =>
-    set({ isConnected: true, publicKey, status: 'connected', needsReconnect: false }),
+  clearError: () => set({ error: null }),
 
-  setDisconnected: () =>
-    set({
-      isConnected: false,
-      publicKey: null,
-      status: 'disconnected',
-      isSigning: false,
-      sessions: [],
-      activeTopic: null,
-      needsReconnect: false,
-    }),
-
-  setSigning: (isSigning) => set({ isSigning }),
-
-  setStatus: (status) => set({ status }),
-
-  setPairingUri: (pairingUri) => set({ pairingUri }),
-
-  addSession: (session) =>
-    set((state) => {
-      const existing = state.sessions.findIndex((s) => s.topic === session.topic);
-      if (existing >= 0) {
-        const updated = [...state.sessions];
-        updated[existing] = session;
-        return { sessions: updated };
-      }
-      return { sessions: [...state.sessions, session] };
-    }),
-
-  removeSession: (topic) =>
-    set((state) => ({
-      sessions: state.sessions.filter((s) => s.topic !== topic),
-      activeTopic: state.activeTopic === topic ? null : state.activeTopic,
-    })),
-
-  setSessionHealth: (topic, healthy) =>
-    set((state) => ({
-      sessions: state.sessions.map((s) =>
-        s.topic === topic ? { ...s, isHealthy: healthy } : s,
-      ),
-    })),
-
-  setActiveTopic: (activeTopic) => set({ activeTopic }),
-
-  switchWallet: (topic) =>
-    set((state) => {
-      const session = state.sessions.find((s) => s.topic === topic);
-      if (!session) return state;
-      return {
-        activeTopic: topic,
-        publicKey: session.publicKey,
+  connectFreighter: async () => {
+    set({ isConnecting: true, error: null, pairingUri: null });
+    try {
+      const { address } = await walletService.connectFreighter();
+      set({
+        address,
+        sessionId: null,
+        walletType: 'freighter',
         isConnected: true,
-        status: 'connected' as const,
-      };
-    }),
+        isConnecting: false,
+        error: null,
+      });
+      await persistState(get());
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to connect Freighter';
+      set({ isConnecting: false, error: message });
+      throw error;
+    }
+  },
 
-  addEvent: (event) =>
-    set((state) => {
-      const recent = state.events.slice(-49);
-      return { events: [...recent, event] };
-    }),
+  initLobstrConnection: async () => {
+    set({ isConnecting: true, error: null, pairingUri: null });
+    try {
+      await walletService.initWalletConnect();
+      const uri = await walletService.getLobstrConnectionUri();
+      set({ pairingUri: uri });
+      return uri;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to connect Lobstr';
+      set({ isConnecting: false, error: message, pairingUri: null });
+      throw error;
+    }
+  },
 
-  clearEvents: () => set({ events: [] }),
+  completeLobstrConnection: async () => {
+    set({ isSigning: true });
+    try {
+      const result = await walletService.approveLobstrSession();
+      set({
+        address: result.address,
+        sessionId: result.sessionId,
+        walletType: 'lobstr',
+        isConnected: true,
+        isConnecting: false,
+        isSigning: false,
+        error: null,
+        pairingUri: null,
+      });
+      await persistState(get());
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to connect Lobstr';
+      set({
+        isConnecting: false,
+        isSigning: false,
+        error: message,
+        pairingUri: null,
+      });
+      throw error;
+    }
+  },
 
-  setNeedsReconnect: (needsReconnect) => set({ needsReconnect }),
+  disconnect: async () => {
+    const { walletType, sessionId } = get();
 
-  signXdr: async (unsignedXdr: string) => {
-    const state = get();
-    const { walletService } = await import('../services/wallet.service');
-    const topic = state.activeTopic;
-    const pk = state.publicKey;
-
-    if (!topic || !pk) {
-      throw new Error('No active wallet session. Please connect your wallet.');
+    try {
+      if (walletType === 'lobstr' && sessionId) {
+        await walletService.disconnectLobstr(sessionId);
+      }
+    } catch {
+      // Best-effort disconnect
     }
 
-    return walletService.signXdr(topic, unsignedXdr, pk);
+    set({
+      address: null,
+      sessionId: null,
+      walletType: null,
+      isConnected: false,
+      isConnecting: false,
+      isSigning: false,
+      error: null,
+      pairingUri: null,
+    });
+
+    try {
+      if (Platform.OS === 'web') {
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        await SecureStore.deleteItemAsync(STORAGE_KEY);
+      }
+    } catch {
+      // Best-effort clear
+    }
+  },
+
+  signXdr: async (xdr: string) => {
+    const { walletType, address, sessionId } = get();
+
+    if (!walletType || !address) {
+      throw new Error('No wallet connected. Please connect your wallet first.');
+    }
+
+    set({ isSigning: true, error: null });
+
+    try {
+      let signedXdr: string;
+
+      if (walletType === 'freighter') {
+        signedXdr = await walletService.signWithFreighter(xdr);
+      } else if (walletType === 'lobstr') {
+        if (!sessionId) {
+          throw new Error('Lobstr session not found. Please reconnect.');
+        }
+        signedXdr = await walletService.signWithLobstr(xdr, sessionId, address);
+      } else {
+        throw new Error('Unsupported wallet type');
+      }
+
+      set({ isSigning: false });
+      return signedXdr;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to sign transaction';
+      set({ isSigning: false, error: message });
+      throw error;
+    }
+  },
+
+  hydrate: async () => {
+    try {
+      const raw =
+        Platform.OS === 'web'
+          ? localStorage.getItem(STORAGE_KEY)
+          : await SecureStore.getItemAsync(STORAGE_KEY);
+
+      if (!raw) return;
+
+      const stored: StoredWalletState = JSON.parse(raw);
+      if (!stored.walletType || !stored.address) return;
+
+      if (stored.walletType === 'lobstr' && stored.sessionId) {
+        await walletService.initWalletConnect();
+        const restored = await walletService.restoreLobstrSession();
+        if (restored) {
+          set({
+            address: restored.address,
+            sessionId: restored.sessionId,
+            walletType: 'lobstr',
+            isConnected: true,
+            error: null,
+          });
+          return;
+        }
+      }
+
+      if (stored.walletType === 'freighter') {
+        set({
+          address: stored.address,
+          sessionId: null,
+          walletType: 'freighter',
+          isConnected: true,
+          error: null,
+        });
+      }
+    } catch {
+      // Silently fail hydration; user can reconnect
+    }
   },
 }));
+
+async function persistState(state: WalletState): Promise<void> {
+  const data: StoredWalletState = {
+    address: state.address,
+    sessionId: state.sessionId,
+    walletType: state.walletType,
+  };
+
+  const raw = JSON.stringify(data);
+  if (Platform.OS === 'web') {
+    localStorage.setItem(STORAGE_KEY, raw);
+  } else {
+    await SecureStore.setItemAsync(STORAGE_KEY, raw);
+  }
+}

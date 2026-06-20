@@ -6,11 +6,11 @@ Update this file after every completed screen, component, hook, or architectural
 
 ## Current Phase
 
-**Phase 1 — Shared Components & Design System**
+**Phase 2 — Wallet Integration**
 
 ## Current Goal
 
-Build all shared components from scratch using StepFi's dark theme design system.
+Implement wallet connection and transaction signing via Freighter (web) and Lobstr (WalletConnect v2, mobile).
 
 ---
 
@@ -42,14 +42,12 @@ Build all shared components from scratch using StepFi's dark theme design system
 
 ### Zustand Stores
 - `stores/auth.store.ts` — tokens + wallet address persisted via Expo SecureStore, `hydrate()` invoked from root layout
-- `stores/wallet.store.ts` — `isConnected`, `publicKey`, `status` (`WalletConnectionStatus`), `isSigning`
 - `stores/user.store.ts` — `profile`, `reputation`, `isLoading`
 - `stores/loans.store.ts` — `loans`, `selectedLoan`, `isLoading`
 
 ### Navigation (Expo Router)
 - `app/_layout.tsx` — root Stack, hydrates auth on mount, redirects unauth → `/(auth)/sign-in`, auth-in-auth-group → `/(tabs)/pay`
 - `app/(auth)/_layout.tsx` — Stack
-- `app/(auth)/sign-in.tsx`, `app/(auth)/register.tsx` — placeholders
 - `app/(tabs)/_layout.tsx` — bottom Tabs (pay/invest/settings) with Lucide icons (`CreditCard`, `TrendingUp`, `Settings`), brand-green active tint
 - `app/(tabs)/pay.tsx`, `app/(tabs)/invest.tsx`, `app/(tabs)/settings.tsx` — placeholders
 
@@ -60,6 +58,16 @@ Build all shared components from scratch using StepFi's dark theme design system
 
 ### Verification
 - `npx expo export --platform web` — succeeded (2394 modules bundled, exit 0)
+
+### Wallet Integration
+- `services/wallet.service.ts` — Freighter API integration (`connectFreighter`, `signWithFreighter`) and Lobstr WalletConnect v2 (`initWalletConnect`, `getLobstrConnectionUri`, `approveLobstrSession`, `signWithLobstr`); session persistence via SecureStore; session expiry auto-disconnect listeners
+- `stores/wallet.store.ts` — Zustand store with `{ address, sessionId, walletType, isConnected, isConnecting, isSigning, error, pairingUri }`; actions: `connectFreighter`, `initLobstrConnection`, `completeLobstrConnection`, `disconnect`, `signXdr`; SecureStore persistence for auto-restore on app restart
+- `hooks/useWallet.ts` — Clean hook wrapping store selectors with auto-hydrate on mount
+- `components/wallet/ConnectModal.tsx` — QR code modal using `react-native-qrcode-svg`; Lobstr deep-link button; handles loading (QR generation & approval wait), success, and error states; session expiry handled via WC event listeners
+- `app/(auth)/sign-in.tsx` — Two wallet options: Freighter (Puzzle icon, blue border) and Lobstr (QrCode icon, green border); connected state with Continue/Disconnect; loading, error, empty states all handled
+- `constants/config.ts` — Updated to read `EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID`
+- `.env.example` — Added `EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID`
+- Dependencies added: `@stellar/freighter-api`, `react-native-qrcode-svg`
 
 ---
 
@@ -83,30 +91,17 @@ Build all shared components from scratch using StepFi's dark theme design system
 9. components/shared/ConfirmTransaction.tsx
 
 ### Screens (all redesigned from scratch)
-10. app/(auth)/sign-in.tsx
-11. app/(auth)/register.tsx
-12. app/(tabs)/pay.tsx
-13. app/(tabs)/invest.tsx
-14. app/(tabs)/settings.tsx
-15. app/loan/[id].tsx
-16. app/loan/apply.tsx
-
-### Wallet Integration
-17. WalletConnect v2 session management: ✅ Completed (Jun 2026)
-    - `services/wallet.service.ts` — SignClient init, session events, health check (60s ping), SecureStore persistence, session recovery
-    - `stores/wallet.store.ts` — Multi-wallet session tracking, active wallet switching, event log, reconnect state
-    - `hooks/useWallet.ts` — React hook with connect/disconnect/switch/sign/recovery, deep link support
-    - `components/wallet/SessionStatus.tsx` — Connection status, health indicator, expire timer, multi-wallet switcher, recovery button
-    - `types/wallet.types.ts` — Enhanced types (WalletSessionInfo, StoredSession, WalletEvent, WalletConnectionStatus)
-    - `constants/config.ts` — Added `WC_PROJECT_ID` from env
-    - `app/_layout.tsx` — Wallet service initialization on boot
-    - Dependencies: `@walletconnect/sign-client`, `@walletconnect/types`
-    - `npx expo export --platform web` — succeeded (3668 modules bundled, exit 0)
+10. app/(auth)/register.tsx
+11. app/(tabs)/pay.tsx
+12. app/(tabs)/invest.tsx
+13. app/(tabs)/settings.tsx
+14. app/loan/[id].tsx
+15. app/loan/apply.tsx
 
 ### Deployment
-18. Expo preview build (EAS)
-19. Netlify web build
-20. EAS automated production build pipeline — GitHub Actions workflow triggered on `v*` tag push, builds APK via `eas build`, attaches to GitHub Release
+16. Expo preview build (EAS)
+17. Netlify web build
+18. EAS automated production build pipeline — GitHub Actions workflow triggered on `v*` tag push, builds APK via `eas build`, attaches to GitHub Release
 
 ---
 
@@ -114,7 +109,7 @@ Build all shared components from scratch using StepFi's dark theme design system
 
 | Screen | Route | Status | Notes |
 |---|---|---|---|
-| Sign In | /(auth)/sign-in | To redesign | Shell exists, no real logic or design |
+| Sign In | /(auth)/sign-in | ✅ Completed | Two wallet buttons (Freighter + Lobstr), QR modal, connected/disconnected states |
 | Register | /(auth)/register | To redesign | Shell exists, no real logic or design |
 | Pay Dashboard | /(tabs)/pay | To redesign | Shell exists, data hardcoded |
 | Invest Dashboard | /(tabs)/invest | To redesign | Shell exists, data hardcoded |
@@ -141,6 +136,7 @@ Build all shared components from scratch using StepFi's dark theme design system
 | InstallmentRow.tsx | Not started |
 | NotificationsPanel.tsx | Not started |
 | ConfirmTransaction.tsx | Not started — critical before any blockchain action |
+| ConnectModal.tsx | ✅ Completed — QR code, Lobstr deep-link, loading/error/success states |
 
 ---
 
@@ -159,11 +155,12 @@ Build all shared components from scratch using StepFi's dark theme design system
 - Zustand — simpler API, less boilerplate
 - Axios — JWT refresh handled globally via interceptors
 - WalletConnect v2 — mobile deep link signing for Lobstr and xBull
-- Expo SecureStore — encrypted JWT token storage
+- Expo SecureStore — encrypted JWT token storage (and wallet session persistence)
 - Dark theme only — no light mode in v1
 - Lucide React Native — single icon library, stroke-based only
 - All screens and components built from scratch to StepFi's own design system
 - No custodial wallet in v1
+- Freighter for web/browser, Lobstr (via WalletConnect v2) for mobile
 
 ---
 
@@ -175,3 +172,8 @@ Build all shared components from scratch using StepFi's dark theme design system
 - Use the frontend-design skill for all screen and component work
 - Run npx expo start and verify before committing any UI changes
 - `App.tsx` is legacy (entry switched to `expo-router/entry`) — safe to delete
+- Wallet session persists via SecureStore on mobile, localStorage on web
+- Session_delete and session_expire events auto-trigger disconnect
+- No hardcoded hex colors — all reference constants/colors.ts
+- No API calls in screen files — only store actions and hooks
+- Lucide React Native used for all icons

@@ -1,69 +1,39 @@
+import { isConnected, getPublicKey, signTransaction } from '@stellar/freighter-api';
 import SignClient from '@walletconnect/sign-client';
-import type { SessionTypes, SignClientTypes } from '@walletconnect/types';
+import type { SessionTypes } from '@walletconnect/types';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import { useWalletStore } from '../stores/wallet.store';
 import { config } from '../constants/config';
-import type { StoredSession } from '../types/wallet.types';
 
-const SESSIONS_KEY = 'stepfi.walletSessions';
+const SESSION_KEY = 'stepfi.lobstrSession';
+const WC_NAMESPACE = 'stellar';
+const WC_CHAIN = 'stellar:pubnet:';
 
-const storage = {
-  async getItem(key: string): Promise<string | null> {
-    if (Platform.OS === 'web') {
-      return localStorage.getItem(key);
-    }
-    return SecureStore.getItemAsync(key);
-  },
-  async setItem(key: string, value: string): Promise<void> {
-    if (Platform.OS === 'web') {
-      localStorage.setItem(key, value);
-      return;
-    }
-    await SecureStore.setItemAsync(key, value);
-  },
-  async removeItem(key: string): Promise<void> {
-    if (Platform.OS === 'web') {
-      localStorage.removeItem(key);
-      return;
-    }
-    await SecureStore.deleteItemAsync(key);
-  },
-};
+interface LobstrSessionData {
+  topic: string;
+  address: string;
+  expiry: number;
+}
 
 class WalletService {
-  private static instance: WalletService;
-  private client: SignClient | null = null;
-  private initialized = false;
-  private healthCheckTimer: ReturnType<typeof setInterval> | null = null;
+  private wcClient: SignClient | null = null;
+  private wcInitialized = false;
   private pendingApproval: (() => Promise<SessionTypes.Struct>) | null = null;
 
-  static getInstance(): WalletService {
-    if (!WalletService.instance) {
-      WalletService.instance = new WalletService();
-    }
-    return WalletService.instance;
+  get isWalletConnectReady(): boolean {
+    return this.wcInitialized;
   }
 
-  get isInitialized(): boolean {
-    return this.initialized;
-  }
-
-  get signClient(): SignClient | null {
-    return this.client;
-  }
-
-  async initialize(): Promise<void> {
-    if (this.initialized) return;
+  async initWalletConnect(): Promise<void> {
+    if (this.wcInitialized) return;
 
     if (!config.WC_PROJECT_ID) {
-      console.warn('WalletConnect project ID not configured. Session management disabled.');
-      this.initialized = true;
+      console.warn('WalletConnect project ID not configured');
       return;
     }
 
     try {
-      this.client = await SignClient.init({
+      this.wcClient = await SignClient.init({
         projectId: config.WC_PROJECT_ID,
         metadata: {
           name: config.APP_NAME,
@@ -73,80 +43,70 @@ class WalletService {
         },
       });
 
-      this.registerEventHandlers();
-      await this.restoreSessions();
-      this.startHealthCheck();
-      this.initialized = true;
+      this.wcClient.on('session_delete', (event) => {
+        const { useWalletStore } = require('../stores/wallet.store');
+        const store = useWalletStore.getState();
+        if (store.walletType === 'lobstr' && store.sessionId === event.topic) {
+          store.disconnect();
+        }
+      });
+
+      this.wcClient.on('session_expire', (event) => {
+        const { useWalletStore } = require('../stores/wallet.store');
+        const store = useWalletStore.getState();
+        if (store.walletType === 'lobstr' && store.sessionId === event.topic) {
+          store.disconnect();
+        }
+      });
+
+      this.wcInitialized = true;
     } catch (error) {
       console.error('Failed to initialize WalletConnect:', error);
-      useWalletStore.getState().setStatus('error');
-      this.initialized = true;
     }
   }
 
-  private registerEventHandlers(): void {
-    if (!this.client) return;
-
-    this.client.on('session_proposal', (event) => {
-      useWalletStore.getState().addEvent({
-        type: 'session_proposal',
-        timestamp: Date.now(),
-      });
-    });
-
-    this.client.on('session_delete', (event) => {
-      const store = useWalletStore.getState();
-      store.removeSession(event.topic);
-      store.addEvent({ type: 'session_delete', topic: event.topic, timestamp: Date.now() });
-      const remaining = store.sessions;
-      if (remaining.length === 0) {
-        store.setDisconnected();
+  async connectFreighter(): Promise<{ address: string }> {
+    try {
+      const connected = await isConnected();
+      if (!connected) {
+        throw new Error(
+          'Freighter is not connected. Please install the Freighter browser extension.'
+        );
       }
-      this.persistSessions();
-    });
 
-    this.client.on('session_expire', (event) => {
-      const store = useWalletStore.getState();
-      store.removeSession(event.topic);
-      store.addEvent({ type: 'session_expire', topic: event.topic, timestamp: Date.now() });
-      const remaining = store.sessions;
-      if (remaining.length === 0) {
-        store.setDisconnected();
-      } else if (store.activeTopic === event.topic) {
-        const next = remaining[0];
-        store.setActiveTopic(next.topic);
-        store.setConnected(next.publicKey);
-      }
-      this.persistSessions();
-    });
-
-    this.client.on('session_ping', (event) => {
-      useWalletStore.getState().setSessionHealth(event.topic, true);
-    });
-
-    this.client.on('session_update', (event) => {
-      useWalletStore.getState().addEvent({
-        type: 'session_update',
-        topic: event.topic,
-        timestamp: Date.now(),
-      });
-    });
-
-    this.client.on('session_connect', (event) => {
-      this.handleNewSession(event.session);
-    });
-
-    this.client.on('session_request', (_event) => {});
+      const address = await getPublicKey();
+      return { address };
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error('Failed to connect to Freighter');
+    }
   }
 
-  async getConnectionUri(): Promise<string> {
-    if (!this.client) throw new Error('WalletConnect not initialized');
+  async signWithFreighter(xdr: string): Promise<string> {
+    try {
+      const signed = await signTransaction(xdr, {
+        networkPassphrase: 'Public Global Stellar Network ; September 2015',
+      });
+      return signed;
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error('User rejected the signing request');
+    }
+  }
 
-    const { uri, approval } = await this.client.connect({
+  async getLobstrConnectionUri(): Promise<string> {
+    if (!this.wcClient) {
+      await this.initWalletConnect();
+      if (!this.wcClient) {
+        throw new Error('WalletConnect not initialized');
+      }
+    }
+
+    const { uri, approval } = await this.wcClient.connect({
       requiredNamespaces: {
-        stellar: {
-          methods: ['stellar_signXDR'],
-          chains: ['stellar:pubnet:'],
+        [WC_NAMESPACE]: {
+          methods: ['stellar_signXDR', 'stellar_signAndSubmitTransaction'],
+          chains: [WC_CHAIN],
           events: ['chainChanged', 'accountsChanged'],
         },
       },
@@ -154,13 +114,21 @@ class WalletService {
 
     this.pendingApproval = approval;
 
-    if (!uri) throw new Error('Failed to generate WalletConnect URI');
+    if (!uri) {
+      throw new Error('Failed to generate WalletConnect URI');
+    }
 
     return uri;
   }
 
-  async approveSession(timeoutMs = 300_000): Promise<SessionTypes.Struct> {
-    if (!this.pendingApproval) throw new Error('No pending session approval');
+  async approveLobstrSession(
+    timeoutMs = 300_000
+  ): Promise<{ address: string; sessionId: string }> {
+    if (!this.pendingApproval) {
+      throw new Error(
+        'No pending Lobstr session. Call getLobstrConnectionUri() first.'
+      );
+    }
 
     const timeout = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Session approval timed out')), timeoutMs);
@@ -169,279 +137,127 @@ class WalletService {
     try {
       const session = await Promise.race([this.pendingApproval(), timeout]);
       this.pendingApproval = null;
-      this.handleNewSession(session);
-      return session;
+
+      const stellarNamespace = session.namespaces[WC_NAMESPACE];
+      if (!stellarNamespace || stellarNamespace.accounts.length === 0) {
+        throw new Error('No Stellar account found in the session');
+      }
+
+      const account = stellarNamespace.accounts[0];
+      const address = account.split(':').pop() || account;
+
+      const sessionData: LobstrSessionData = {
+        topic: session.topic,
+        address,
+        expiry: session.expiry,
+      };
+
+      await this.persistLobstrSession(sessionData);
+
+      return { address, sessionId: session.topic };
     } catch (error) {
       this.pendingApproval = null;
-      useWalletStore.getState().setStatus('error');
       throw error;
     }
   }
 
-  async pair(uri: string): Promise<void> {
-    if (!this.client) throw new Error('WalletConnect not initialized');
-    await this.client.pair({ uri });
-  }
-
-  async disconnect(topic?: string): Promise<void> {
-    if (!this.client) return;
-
-    const sessions = this.client.session.getAll();
-    const topicToDisconnect = topic ?? (sessions.length > 0 ? sessions[0].topic : undefined);
-
-    if (!topicToDisconnect) return;
+  async signWithLobstr(
+    xdr: string,
+    sessionId: string,
+    publicKey: string
+  ): Promise<string> {
+    if (!this.wcClient) {
+      throw new Error('WalletConnect not initialized');
+    }
 
     try {
-      await this.client.disconnect({
-        topic: topicToDisconnect,
+      const result = await this.wcClient.request<string>({
+        topic: sessionId,
+        request: {
+          method: 'stellar_signXDR',
+          params: { xdr, publicKey },
+        },
+        chainId: WC_CHAIN,
+      });
+
+      return result;
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error('User rejected the signing request');
+    }
+  }
+
+  async disconnectLobstr(sessionId: string): Promise<void> {
+    if (!this.wcClient) return;
+
+    try {
+      await this.wcClient.disconnect({
+        topic: sessionId,
         reason: { code: 6000, message: 'User disconnected' },
       });
     } catch {
-      const store = useWalletStore.getState();
-      store.removeSession(topicToDisconnect);
-      const remaining = store.sessions;
-      if (remaining.length === 0) {
-        store.setDisconnected();
-      } else if (store.activeTopic === topicToDisconnect) {
-        store.switchWallet(remaining[0].topic);
-      }
-      this.persistSessions();
+      // Session may already be invalid
     }
+
+    await this.clearLobstrSession();
   }
 
-  switchWallet(topic: string): void {
-    const store = useWalletStore.getState();
-    store.switchWallet(topic);
-  }
-
-  async signXdr(topic: string, xdr: string, publicKey: string): Promise<string> {
-    if (!this.client) throw new Error('WalletConnect not initialized');
-
-    const result = await this.client.request<string>({
-      topic,
-      request: {
-        method: 'stellar_signXDR',
-        params: { xdr, publicKey },
-      },
-      chainId: 'stellar:pubnet:',
-    });
-
-    return result;
-  }
-
-  async ping(topic: string): Promise<boolean> {
-    if (!this.client) return false;
+  async restoreLobstrSession(): Promise<{
+    address: string;
+    sessionId: string;
+  } | null> {
+    if (!this.wcClient) return null;
 
     try {
-      await this.client.ping({ topic });
-      useWalletStore.getState().setSessionHealth(topic, true);
-      return true;
-    } catch {
-      useWalletStore.getState().setSessionHealth(topic, false);
-      return false;
-    }
-  }
+      const raw = await this.getLobstrSession();
+      if (!raw) return null;
 
-  async tryRecover(topic: string): Promise<boolean> {
-    if (!this.client) return false;
-
-    try {
-      await this.client.ping({ topic });
-      useWalletStore.getState().setSessionHealth(topic, true);
-      return true;
-    } catch {
-      const store = useWalletStore.getState();
-      store.setSessionHealth(topic, false);
-      store.addEvent({ type: 'session_expire', topic, timestamp: Date.now() });
-
-      const session = this.client.session.get(topic);
-      if (!session || Date.now() >= session.expiry * 1000) {
-        store.removeSession(topic);
-        const remaining = store.sessions;
-        if (remaining.length === 0) {
-          store.setDisconnected();
-        } else if (store.activeTopic === topic) {
-          store.setActiveTopic(remaining[0].topic);
-          store.setConnected(remaining[0].publicKey);
-        }
-        this.persistSessions();
-      }
-
-      return false;
-    }
-  }
-
-  getSessions(): SessionTypes.Struct[] {
-    if (!this.client) return [];
-    return this.client.session.getAll();
-  }
-
-  getSession(topic: string): SessionTypes.Struct | undefined {
-    if (!this.client) return undefined;
-    return this.client.session.get(topic);
-  }
-
-  private handleNewSession(session: SessionTypes.Struct): void {
-    const stellarNamespace = session.namespaces.stellar;
-    if (!stellarNamespace) return;
-
-    const accounts = stellarNamespace.accounts;
-    if (accounts.length === 0) return;
-
-    const account = accounts[0];
-    const publicKey = account.split(':').pop() || account;
-
-    const metadata = session.peer.metadata;
-    const walletName = metadata.name || 'Unknown Wallet';
-    const walletIcon = metadata.icons?.[0];
-
-    const store = useWalletStore.getState();
-    store.addSession({
-      topic: session.topic,
-      publicKey,
-      walletName,
-      walletIcon,
-      connectedAt: new Date().toISOString(),
-      expiry: session.expiry,
-      isHealthy: true,
-    });
-
-    if (!store.activeTopic) {
-      store.setActiveTopic(session.topic);
-      store.setConnected(publicKey);
-    }
-
-    store.addEvent({ type: 'session_connect', topic: session.topic, timestamp: Date.now() });
-    this.persistSessions();
-  }
-
-  private async persistSessions(): Promise<void> {
-    const store = useWalletStore.getState();
-    const stored: StoredSession[] = store.sessions.map((s) => ({
-      topic: s.topic,
-      publicKey: s.publicKey,
-      walletName: s.walletName,
-      walletIcon: s.walletIcon,
-      connectedAt: s.connectedAt,
-      expiry: s.expiry,
-    }));
-
-    await storage.setItem(SESSIONS_KEY, JSON.stringify(stored));
-  }
-
-  private async restoreSessions(): Promise<void> {
-    try {
-      const raw = await storage.getItem(SESSIONS_KEY);
-      if (!raw) return;
-
-      const stored: StoredSession[] = JSON.parse(raw);
-      if (!Array.isArray(stored) || stored.length === 0) return;
-
+      const data: LobstrSessionData = JSON.parse(raw);
       const now = Math.floor(Date.now() / 1000);
-      const valid = stored.filter((s) => s.expiry > now);
 
-      if (valid.length === 0) {
-        await storage.removeItem(SESSIONS_KEY);
-        return;
+      if (data.expiry <= now) {
+        await this.clearLobstrSession();
+        return null;
       }
 
-      const store = useWalletStore.getState();
-      for (const s of valid) {
-        const isHealthy = this.client ? await this.pingHealthy(s.topic) : false;
-        store.addSession({
-          topic: s.topic,
-          publicKey: s.publicKey,
-          walletName: s.walletName,
-          walletIcon: s.walletIcon,
-          connectedAt: s.connectedAt,
-          expiry: s.expiry,
-          isHealthy,
-        });
+      const session = this.wcClient.session.get(data.topic);
+      if (!session) {
+        await this.clearLobstrSession();
+        return null;
       }
 
-      if (valid.length > 0 && !store.activeTopic) {
-        const first = valid[0];
-        store.setActiveTopic(first.topic);
-        store.setConnected(first.publicKey);
-      }
+      return { address: data.address, sessionId: data.topic };
     } catch {
-      await storage.removeItem(SESSIONS_KEY);
+      await this.clearLobstrSession();
+      return null;
     }
   }
 
-  private async pingHealthy(topic: string): Promise<boolean> {
-    if (!this.client) return false;
-    try {
-      await this.client.ping({ topic });
-      return true;
-    } catch {
-      return false;
+  private async persistLobstrSession(
+    data: LobstrSessionData
+  ): Promise<void> {
+    const raw = JSON.stringify(data);
+    if (Platform.OS === 'web') {
+      localStorage.setItem(SESSION_KEY, raw);
+    } else {
+      await SecureStore.setItemAsync(SESSION_KEY, raw);
     }
   }
 
-  private startHealthCheck(): void {
-    this.stopHealthCheck();
-    this.healthCheckTimer = setInterval(() => {
-      this.performHealthCheck();
-    }, 60_000);
+  private async getLobstrSession(): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(SESSION_KEY);
+    }
+    return SecureStore.getItemAsync(SESSION_KEY);
   }
 
-  private stopHealthCheck(): void {
-    if (this.healthCheckTimer !== null) {
-      clearInterval(this.healthCheckTimer);
-      this.healthCheckTimer = null;
+  private async clearLobstrSession(): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(SESSION_KEY);
+    } else {
+      await SecureStore.deleteItemAsync(SESSION_KEY);
     }
-  }
-
-  private async performHealthCheck(): Promise<void> {
-    const store = useWalletStore.getState();
-    const sessions = store.sessions;
-
-    for (const session of sessions) {
-      try {
-        if (this.client) {
-          await this.client.ping({ topic: session.topic });
-          store.setSessionHealth(session.topic, true);
-        }
-      } catch {
-        store.setSessionHealth(session.topic, false);
-
-        const wcSession = this.client?.session.get(session.topic);
-        if (wcSession && Date.now() < wcSession.expiry * 1000) {
-          const recovered = await this.tryRecover(session.topic);
-          if (!recovered) {
-            store.addEvent({
-              type: 'session_expire',
-              topic: session.topic,
-              timestamp: Date.now(),
-            });
-          }
-        } else {
-          store.removeSession(session.topic);
-          const remaining = store.sessions;
-          if (remaining.length === 0) {
-            store.setDisconnected();
-          } else if (store.activeTopic === session.topic) {
-            store.setActiveTopic(remaining[0].topic);
-            store.setConnected(remaining[0].publicKey);
-          }
-          this.persistSessions();
-        }
-      }
-    }
-  }
-
-  async destroy(): Promise<void> {
-    this.stopHealthCheck();
-    if (this.client) {
-      try {
-        await this.client.core.relayer.transportClose();
-      } catch {}
-    }
-    this.initialized = false;
-    this.client = null;
-    this.pendingApproval = null;
   }
 }
 
-export const walletService = WalletService.getInstance();
+export const walletService = new WalletService();
