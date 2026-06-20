@@ -1,12 +1,28 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import NetInfo from '@react-native-community/netinfo';
 import { useAuthStore } from '../stores/auth.store';
+import { useUserStore } from '../stores/user.store';
 import { useSecurityStore } from '../src/security/security.store';
 import { biometricService } from '../src/security/biometric.service';
 import { BiometricGate } from '../src/components/BiometricGate';
+import { useConnectivityStore } from '../src/offline/connectivity.store';
+import { processQueue } from '../src/offline/offline-sync';
+import { initPromise } from '../src/locales/i18n';
+import { SentryErrorBoundary } from '../components/SentryErrorBoundary';
+import {
+  initSentry,
+  setSentryUser,
+  clearSentryUser,
+  addBreadcrumb,
+  Sentry,
+} from '../services/sentry';
 import '../global.css';
+
+// Initialise Sentry as early as possible (module‑level, before any component)
+initSentry();
 
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -15,21 +31,43 @@ function useAuthGuard() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const { onboardingComplete, role } = useUserStore();
 
   useEffect(() => {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const isOnboarding = segments[segments.length - 1] === 'onboarding';
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/sign-in');
-    } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/(tabs)');
+    } else if (isAuthenticated) {
+      if (role === 'learner' && !onboardingComplete && !isOnboarding) {
+        router.replace('/(auth)/onboarding');
+      } else if ((onboardingComplete || role === 'sponsor' || role === null) && (inAuthGroup || isOnboarding)) {
+        router.replace('/(tabs)');
+      }
     }
-  }, [isAuthenticated, isLoading, segments, router]);
+  }, [isAuthenticated, isLoading, segments, router, onboardingComplete, role]);
 }
 
-export default function RootLayout() {
+// Sentry user‑context sync — attach / clear wallet identity on auth changes
+function useSentryUserContext() {
+  const walletAddress = useAuthStore((s) => s.walletAddress);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated && walletAddress) {
+      setSentryUser(walletAddress);
+      addBreadcrumb('auth', 'User context set', { hasWallet: true });
+    } else {
+      clearSentryUser();
+    }
+  }, [isAuthenticated, walletAddress]);
+}
+
+function RootLayout() {
+  const [i18nReady, setI18nReady] = useState(false);
   const hydrate = useAuthStore((s) => s.hydrate);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -57,9 +95,12 @@ export default function RootLayout() {
 
   useEffect(() => {
     void hydrate();
+    void useUserStore.getState().hydrate();
+    initPromise.then(() => setI18nReady(true));
   }, [hydrate]);
 
   useAuthGuard();
+  useSentryUserContext();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !biometricCheckDone) {
@@ -78,6 +119,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
+      addBreadcrumb('app.lifecycle', `AppState → ${state}`);
+
       if (state === 'active') {
         const elapsed = Date.now() - lastActiveRef.current;
         if (
@@ -104,29 +147,58 @@ export default function RootLayout() {
     }
   }, [isLocked, isAuthenticated, startIdleTimer]);
 
-  if (isLoading) {
+  const prevConnectedRef = useRef(true);
+
+  useEffect(() => {
+    NetInfo.fetch().then((state) => {
+      useConnectivityStore.getState().setConnected(state.isConnected ?? false);
+      useConnectivityStore.getState().setConnectionType(state.type);
+      useConnectivityStore.getState().setInternetReachable(state.isInternetReachable);
+      prevConnectedRef.current = state.isConnected ?? false;
+    });
+
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const connected = state.isConnected ?? false;
+      useConnectivityStore.getState().setConnected(connected);
+      useConnectivityStore.getState().setConnectionType(state.type);
+      useConnectivityStore.getState().setInternetReachable(state.isInternetReachable);
+
+      if (!prevConnectedRef.current && connected) {
+        processQueue().catch(() => {});
+      }
+      prevConnectedRef.current = connected;
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (isLoading || !i18nReady) {
     return null;
   }
 
   return (
-    <SafeAreaProvider>
-      {isLocked && isAuthenticated ? (
-        <BiometricGate />
-      ) : (
-        <View
-          style={{ flex: 1 }}
-          onTouchStart={() => {
-            if (!useSecurityStore.getState().isLocked) {
-              startIdleTimer();
-            }
-          }}
-        >
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-        </View>
-      )}
-    </SafeAreaProvider>
+    <SentryErrorBoundary>
+      <SafeAreaProvider>
+        {isLocked && isAuthenticated ? (
+          <BiometricGate />
+        ) : (
+          <View
+            style={{ flex: 1 }}
+            onTouchStart={() => {
+              if (!useSecurityStore.getState().isLocked) {
+                startIdleTimer();
+              }
+            }}
+          >
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+          </View>
+        )}
+      </SafeAreaProvider>
+    </SentryErrorBoundary>
   );
 }
+
+export default Sentry.wrap(RootLayout);

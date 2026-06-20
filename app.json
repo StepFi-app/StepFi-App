@@ -17,7 +17,15 @@
       "expo-router",
       "expo-secure-store",
       "expo-font",
-      "expo-local-authentication"
+      "expo-local-authentication",
+      [
+        "@sentry/react-native",
+        {
+          "organization": "stepfi-org",
+          "project": "stepfi-app",
+          "url": "https://sentry.io/"
+        }
+      ]
     ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",

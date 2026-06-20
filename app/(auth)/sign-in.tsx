@@ -23,8 +23,8 @@ import {
   ChevronLeft,
 } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
-import { config } from '../../constants/config';
 import { useWalletStore } from '../../stores/wallet.store';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const TOTAL_SLIDES = 4;
@@ -90,6 +90,7 @@ interface TierCardProps {
 }
 
 function TierCard({ name, scoreRange, rate, maxCredit, barColor, isHighlighted = false }: TierCardProps) {
+  const { t } = useTranslation();
   return (
     <View
       className="flex-1 rounded-2xl p-4 gap-3"
@@ -118,15 +119,15 @@ function TierCard({ name, scoreRange, rate, maxCredit, barColor, isHighlighted =
       />
       <View className="gap-2">
         <View className="flex-row items-center justify-between">
-          <Text className="text-xs" style={{ color: colors.textMuted }}>Score</Text>
+          <Text className="text-xs" style={{ color: colors.textMuted }}>{t('auth.signIn.score')}</Text>
           <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>{scoreRange}</Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-xs" style={{ color: colors.textMuted }}>Rate</Text>
+          <Text className="text-xs" style={{ color: colors.textMuted }}>{t('auth.signIn.rate')}</Text>
           <Text className="text-xs font-bold" style={{ color: colors.textPrimary }}>{rate}</Text>
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-xs" style={{ color: colors.textMuted }}>Max</Text>
+          <Text className="text-xs" style={{ color: colors.textMuted }}>{t('auth.signIn.max')}</Text>
           <Text
             className="text-xs font-bold"
             style={{ color: isHighlighted ? barColor : colors.primaryContainer }}
@@ -141,11 +142,13 @@ function TierCard({ name, scoreRange, rate, maxCredit, barColor, isHighlighted =
 
 /* ─── Main Component ─── */
 export default function SignInScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isConnecting, setIsConnecting] = useState(false);
   const setConnected = useWalletStore((s) => s.setConnected);
+  const tierNames = t('tierNames', { returnObjects: true }) as string[];
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = event.nativeEvent.contentOffset.x;
@@ -203,13 +206,13 @@ export default function SignInScreen() {
         {/* ─── SLIDE 1: Welcome ─── */}
         <View style={{ width: SCREEN_WIDTH }} className="flex-1 px-4 justify-between pb-8 pt-12">
           <View className="flex-col items-center text-center mt-12 gap-3">
-            <Text className="text-[40px] font-bold" style={{ color: colors.primary }}>StepFi</Text>
+            <Text className="text-[40px] font-bold" style={{ color: colors.primary }}>{t('auth.signIn.stepfi')}</Text>
             <View className="mt-6 items-center">
               <Text className="text-[32px] font-bold text-center mb-1" style={{ color: colors.textPrimary }}>
-                Step into your future.
+                {t('auth.signIn.stepIntoFuture')}
               </Text>
               <Text className="text-[18px] text-center" style={{ color: colors.textSecondary }}>
-                Credit without banks. Progress without limits.
+                {t('auth.signIn.creditWithoutBanks')}
               </Text>
             </View>
           </View>
@@ -225,13 +228,13 @@ export default function SignInScreen() {
             <PaginationDots activeIndex={0} onDotPress={goToSlide} />
 
             <TouchableOpacity
-              className="w-full font-bold py-4 rounded-[16px] flex-row items-center justify-center gap-2"
+              className="w-full py-4 rounded-[16px] items-center justify-center flex-row gap-2"
               style={{ backgroundColor: colors.primaryContainer }}
               activeOpacity={0.8}
               onPress={goToNextSlide}
             >
               <Text className="text-[18px] font-bold" style={{ color: colors.background }}>
-                Next
+                {t('common.next')}
               </Text>
               <ArrowRight size={20} color={colors.background} />
             </TouchableOpacity>
@@ -242,7 +245,7 @@ export default function SignInScreen() {
               onPress={handleConnectWallet}
             >
               <Text className="text-[16px]" style={{ color: colors.textSecondary }}>
-                Already have an account? Sign in
+                {t('auth.signIn.alreadyHaveAccount')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -251,12 +254,12 @@ export default function SignInScreen() {
         {/* ─── SLIDE 2: Features ─── */}
         <View style={{ width: SCREEN_WIDTH }} className="flex-1 px-4 justify-between pb-8 pt-12">
           <View className="flex-1 gap-6">
-            <Text
-              className="text-[32px] font-bold text-center leading-10 mt-12"
-              style={{ color: colors.textPrimary }}
-            >
-              Finance what you need.
-            </Text>
+              <Text
+                className="text-[32px] font-bold text-center leading-10 mt-12"
+                style={{ color: colors.textPrimary }}
+              >
+                {t('auth.signIn.financeWhatYouNeed')}
+              </Text>
 
             <View
               className="rounded-2xl p-6 items-center justify-center my-6"
@@ -281,19 +284,19 @@ export default function SignInScreen() {
             <View className="gap-3">
               <FeatureRow
                 icon={Wallet}
-                text="Sign in with your Stellar wallet. No passwords."
+                text={t('auth.signIn.signInWithWallet')}
                 iconColor={colors.brandBlue}
                 iconBg={colors.brandBlueDim}
               />
               <FeatureRow
                 icon={CreditCard}
-                text="Finance laptops, courses, and dev tools."
+                text={t('auth.signIn.financeLaptops')}
                 iconColor={colors.primaryContainer}
                 iconBg={colors.brandGreenDim}
               />
               <FeatureRow
                 icon={TrendingUp}
-                text="Repay in installments. Build your reputation."
+                text={t('auth.signIn.repayInstallments')}
                 iconColor={colors.textMuted}
                 iconBg={colors.subtle}
               />
@@ -309,7 +312,7 @@ export default function SignInScreen() {
               onPress={goToNextSlide}
             >
               <Text className="text-[18px] font-bold" style={{ color: colors.background }}>
-                Next
+                {t('common.next')}
               </Text>
               <ArrowRight size={20} color={colors.background} />
             </TouchableOpacity>
@@ -319,24 +322,24 @@ export default function SignInScreen() {
         {/* ─── SLIDE 3: Reputation Tiers ─── */}
         <View style={{ width: SCREEN_WIDTH }} className="flex-1 px-4 justify-between pb-8 pt-12">
           <View className="flex-1 gap-5">
-            <Text
-              className="text-[32px] font-bold text-center mt-12 mb-6"
-              style={{ color: colors.textPrimary }}
-            >
-              Your score.{'\n'}Your terms.
-            </Text>
+              <Text
+                className="text-[32px] font-bold text-center mt-12 mb-6"
+                style={{ color: colors.textPrimary }}
+              >
+                {t('auth.signIn.yourScoreYourTerms')}
+              </Text>
 
             <View className="gap-3">
               <View className="flex-row gap-3">
                 <TierCard
-                  name="Starter"
+                  name={tierNames[0]}
                   scoreRange="0-59"
                   rate="10%"
                   maxCredit="$1K"
                   barColor={colors.tier.starter}
                 />
                 <TierCard
-                  name="Bronze"
+                  name={tierNames[1]}
                   scoreRange="60-74"
                   rate="8%"
                   maxCredit="$2.5K"
@@ -345,14 +348,14 @@ export default function SignInScreen() {
               </View>
               <View className="flex-row gap-3">
                 <TierCard
-                  name="Silver"
+                  name={tierNames[2]}
                   scoreRange="75-89"
                   rate="6%"
                   maxCredit="$5K"
                   barColor={colors.tier.silver}
                 />
                 <TierCard
-                  name="Gold"
+                  name={tierNames[3]}
                   scoreRange="90-100"
                   rate="4%"
                   maxCredit="$10K"
@@ -366,7 +369,7 @@ export default function SignInScreen() {
               className="text-[14px] text-center mt-6"
               style={{ color: colors.textMuted }}
             >
-              Pay on time. Score goes up. Rates go down.
+              {t('auth.signIn.payOnTime')}
             </Text>
           </View>
 
@@ -379,7 +382,7 @@ export default function SignInScreen() {
               onPress={goToNextSlide}
             >
               <Text className="text-[18px] font-bold" style={{ color: colors.background }}>
-                Next
+                {t('common.next')}
               </Text>
               <ArrowRight size={20} color={colors.background} />
             </TouchableOpacity>
@@ -405,7 +408,7 @@ export default function SignInScreen() {
               className="text-[32px] font-bold text-center mt-6 mb-2"
               style={{ color: colors.textPrimary }}
             >
-              Connect your wallet.
+              {t('auth.signIn.connectYourWallet')}
             </Text>
             
             <View className="gap-4 items-center px-4">
@@ -413,14 +416,14 @@ export default function SignInScreen() {
                 className="text-[16px] text-center"
                 style={{ color: colors.textSecondary }}
               >
-                No passwords. No email. Just your Stellar wallet.
+                {t('auth.signIn.noPasswords')}
               </Text>
               <View className="flex-row items-center justify-center gap-4 mt-2">
                 <View className="px-3 py-1 rounded-full border" style={{ borderColor: colors.borderSubtle, backgroundColor: colors.surface }}>
-                  <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>Lobstr</Text>
+                  <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>{t('auth.signIn.walletLobstr')}</Text>
                 </View>
                 <View className="px-3 py-1 rounded-full border" style={{ borderColor: colors.borderSubtle, backgroundColor: colors.surface }}>
-                  <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>xBull</Text>
+                  <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>{t('auth.signIn.walletXbull')}</Text>
                 </View>
               </View>
             </View>
@@ -438,7 +441,7 @@ export default function SignInScreen() {
             >
               <Wallet size={20} color={colors.background} />
               <Text className="text-[18px] font-bold" style={{ color: colors.background }}>
-                {isConnecting ? 'Connecting...' : 'Connect Stellar Wallet'}
+                {isConnecting ? t('auth.signIn.connecting') : t('auth.signIn.connectStellarWallet')}
               </Text>
             </TouchableOpacity>
 
@@ -449,7 +452,7 @@ export default function SignInScreen() {
             >
               <HelpCircle size={14} color={colors.textMuted} />
               <Text className="text-[14px]" style={{ color: colors.textMuted }}>
-                Don't have a wallet?
+                {t('auth.signIn.dontHaveWallet')}
               </Text>
             </TouchableOpacity>
           </View>

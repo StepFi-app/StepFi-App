@@ -21,6 +21,7 @@ import {
   Copy,
   CheckCircle,
   Fingerprint,
+  Globe,
 } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { Card } from '../../components/shared/Card';
@@ -28,6 +29,7 @@ import { useAuthStore } from '../../stores/auth.store';
 import { useUserStore } from '../../stores/user.store';
 import { useWalletStore } from '../../stores/wallet.store';
 import { biometricService } from '../../src/security/biometric.service';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface MenuItemProps {
   icon: typeof User;
@@ -80,7 +82,14 @@ function MenuItem({
   );
 }
 
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'fr', label: 'Français' },
+  { code: 'pt', label: 'Português' },
+];
+
 export default function SettingsScreen() {
+  const { t, currentLanguage, changeLanguage } = useTranslation();
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const walletAddress = useAuthStore((s) => s.walletAddress);
   const profile = useUserStore((s) => s.profile);
@@ -96,6 +105,8 @@ export default function SettingsScreen() {
   const [pinStep, setPinStep] = useState<'create' | 'confirm'>('create');
   const [pinError, setPinError] = useState('');
 
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
+
   useEffect(() => {
     async function loadState() {
       const enabled = await biometricService.isBiometricsEnabled();
@@ -109,7 +120,7 @@ export default function SettingsScreen() {
 
   const truncatedAddress = walletAddress
     ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-6)}`
-    : 'Not connected';
+    : t('settings.notConnected');
 
   const handleCopyAddress = () => {
     if (walletAddress) {
@@ -120,12 +131,12 @@ export default function SettingsScreen() {
 
   const handleSignOut = () => {
     Alert.alert(
-      'Sign out',
-      'Are you sure you want to sign out? You will need to reconnect your wallet.',
+      t('settings.signOutTitle'),
+      t('settings.signOutMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Sign out',
+          text: t('settings.signOutConfirm'),
           style: 'destructive',
           onPress: async () => {
             setDisconnected();
@@ -147,7 +158,7 @@ export default function SettingsScreen() {
 
   const handlePinSetupNext = useCallback(() => {
     if (pinInput.length < 4 || pinInput.length > 6) {
-      setPinError('PIN must be 4-6 digits');
+      setPinError(t('settings.pinErrorLength'));
       return;
     }
     if (pinStep === 'create') {
@@ -156,7 +167,7 @@ export default function SettingsScreen() {
       setPinError('');
     } else {
       if (pinInput !== pinConfirm) {
-        setPinError('PINs do not match');
+        setPinError(t('settings.pinErrorMatch'));
         return;
       }
       biometricService.setPin(pinInput).then(() => {
@@ -166,7 +177,7 @@ export default function SettingsScreen() {
         });
       });
     }
-  }, [pinInput, pinConfirm, pinStep]);
+  }, [pinInput, pinConfirm, pinStep, t]);
 
   const handleToggleBiometrics = useCallback(
     async (value: boolean) => {
@@ -196,12 +207,12 @@ export default function SettingsScreen() {
         }
       } else {
         Alert.alert(
-          'Disable biometric lock',
-          'Are you sure? Your PIN will also be removed.',
+          t('settings.disableBiometricTitle'),
+          t('settings.disableBiometricMessage'),
           [
-            { text: 'Cancel', style: 'cancel' },
+            { text: t('common.cancel'), style: 'cancel' },
             {
-              text: 'Disable',
+              text: t('settings.disableBiometricConfirm'),
               style: 'destructive',
               onPress: async () => {
                 await biometricService.disableBiometrics();
@@ -212,8 +223,10 @@ export default function SettingsScreen() {
         );
       }
     },
-    [openPinSetup],
+    [openPinSetup, t],
   );
+
+  const currentLangLabel = LANGUAGES.find((l) => l.code === currentLanguage)?.label ?? LANGUAGES[0].label;
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
@@ -225,7 +238,7 @@ export default function SettingsScreen() {
           className="text-2xl font-bold mt-2 mb-6"
           style={{ color: colors.textPrimary }}
         >
-          Settings
+          {t('settings.settings')}
         </Text>
 
         {/* Profile Card */}
@@ -242,13 +255,13 @@ export default function SettingsScreen() {
                 className="text-lg font-semibold"
                 style={{ color: colors.textPrimary }}
               >
-                {profile?.displayName ?? 'StepFi User'}
+                {profile?.displayName ?? t('settings.defaultName')}
               </Text>
               <Text
                 className="text-xs capitalize"
                 style={{ color: colors.textMuted }}
               >
-                {profile?.role ?? 'Learner'} · {profile?.school ?? profile?.organization ?? ''}
+                {profile?.role ?? t('settings.defaultRole')} · {profile?.school ?? profile?.organization ?? ''}
               </Text>
             </View>
           </View>
@@ -279,13 +292,13 @@ export default function SettingsScreen() {
           className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
           style={{ color: colors.textMuted }}
         >
-          Account
+          {t('settings.account')}
         </Text>
         <Card className="mb-6 px-4">
           <MenuItem
             icon={User}
-            label="Edit Profile"
-            subtitle="Update your personal information"
+            label={t('settings.editProfile')}
+            subtitle={t('settings.editProfileSubtitle')}
             iconColor={colors.brandBlue}
             iconBg={colors.brandBlueDim}
             onPress={() => {}}
@@ -293,11 +306,29 @@ export default function SettingsScreen() {
           <View style={{ height: 1, backgroundColor: colors.border }} />
           <MenuItem
             icon={Bell}
-            label="Notifications"
-            subtitle="Payment reminders and updates"
+            label={t('settings.notifications')}
+            subtitle={t('settings.notificationsSubtitle')}
             iconColor={colors.warning}
             iconBg={colors.warningDim}
             onPress={() => {}}
+          />
+        </Card>
+
+        {/* Language Section */}
+        <Text
+          className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
+          style={{ color: colors.textMuted }}
+        >
+          {t('settings.language')}
+        </Text>
+        <Card className="mb-6 px-4">
+          <MenuItem
+            icon={Globe}
+            label={t('settings.language')}
+            subtitle={currentLangLabel}
+            iconColor={colors.brandGreen}
+            iconBg={colors.brandGreenDim}
+            onPress={() => setLanguageModalVisible(true)}
           />
         </Card>
 
@@ -306,7 +337,7 @@ export default function SettingsScreen() {
           className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
           style={{ color: colors.textMuted }}
         >
-          Security
+          {t('settings.security')}
         </Text>
         <Card className="mb-6 px-4">
           <View className="flex-row items-center py-4 gap-3">
@@ -321,14 +352,14 @@ export default function SettingsScreen() {
                 className="text-sm font-medium"
                 style={{ color: colors.textPrimary }}
               >
-                Biometric Lock
+                {t('settings.biometricLock')}
               </Text>
               <Text className="text-xs" style={{ color: colors.textMuted }}>
                 {biometricsEnabled
-                  ? 'Lock screen is active'
+                  ? t('settings.biometricActive')
                   : !biometricsAvailable
-                    ? 'PIN-only mode'
-                    : 'Require authentication to open app'}
+                    ? t('settings.biometricPinOnly')
+                    : t('settings.biometricRequireAuth')}
               </Text>
             </View>
             <Switch
@@ -345,13 +376,13 @@ export default function SettingsScreen() {
           className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
           style={{ color: colors.textMuted }}
         >
-          Support
+          {t('settings.support')}
         </Text>
         <Card className="mb-6 px-4">
           <MenuItem
             icon={HelpCircle}
-            label="Help & Support"
-            subtitle="FAQs and contact support"
+            label={t('settings.helpSupport')}
+            subtitle={t('settings.helpSupportSubtitle')}
             iconColor={colors.brandGreen}
             iconBg={colors.brandGreenDim}
             onPress={() => {}}
@@ -359,8 +390,8 @@ export default function SettingsScreen() {
           <View style={{ height: 1, backgroundColor: colors.border }} />
           <MenuItem
             icon={Info}
-            label="About StepFi"
-            subtitle="Version, terms, and privacy"
+            label={t('settings.aboutStepfi')}
+            subtitle={t('settings.aboutStepfiSubtitle')}
             iconColor={colors.textSecondary}
             iconBg={colors.subtle}
             onPress={() => {}}
@@ -371,8 +402,8 @@ export default function SettingsScreen() {
         <Card className="px-4">
           <MenuItem
             icon={LogOut}
-            label="Sign out"
-            subtitle="Disconnect wallet and sign out"
+            label={t('settings.signOut')}
+            subtitle={t('settings.signOutSubtitle')}
             onPress={handleSignOut}
             showChevron={false}
             danger
@@ -383,9 +414,70 @@ export default function SettingsScreen() {
           className="text-xs text-center mt-6"
           style={{ color: colors.textFaint }}
         >
-          StepFi v1.0.0
+          {t('settings.versionLabel')}
         </Text>
       </ScrollView>
+
+      {/* Language Picker Modal */}
+      <Modal
+        visible={languageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLanguageModalVisible(false)}
+      >
+        <View
+          className="flex-1 items-center justify-center px-8"
+          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+        >
+          <View
+            className="w-full rounded-2xl p-6 gap-2"
+            style={{ backgroundColor: colors.surface }}
+          >
+            <Text
+              className="text-xl font-bold text-center mb-4"
+              style={{ color: colors.textPrimary }}
+            >
+              {t('settings.language')}
+            </Text>
+            {LANGUAGES.map((lang) => {
+              const isActive = currentLanguage === lang.code;
+              return (
+                <TouchableOpacity
+                  key={lang.code}
+                  className="flex-row items-center justify-between py-4 px-3 rounded-xl"
+                  style={{ backgroundColor: isActive ? colors.subtle : 'transparent' }}
+                  activeOpacity={0.7}
+                  onPress={async () => {
+                    await changeLanguage(lang.code);
+                    setLanguageModalVisible(false);
+                  }}
+                >
+                  <Text
+                    className="text-base"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    {lang.label}
+                  </Text>
+                  {isActive ? (
+                    <CheckCircle size={20} color={colors.brandGreen} />
+                  ) : null}
+                </TouchableOpacity>
+              );
+            })}
+            <TouchableOpacity
+              className="py-4 items-center mt-2"
+              onPress={() => setLanguageModalVisible(false)}
+            >
+              <Text
+                className="text-sm"
+                style={{ color: colors.textMuted }}
+              >
+                {t('common.cancel')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* PIN Setup Modal */}
       <Modal
@@ -406,15 +498,15 @@ export default function SettingsScreen() {
               className="text-xl font-bold text-center"
               style={{ color: colors.textPrimary }}
             >
-              {pinStep === 'create' ? 'Set PIN' : 'Confirm PIN'}
+              {pinStep === 'create' ? t('settings.setPin') : t('settings.confirmPin')}
             </Text>
             <Text
               className="text-sm text-center"
               style={{ color: colors.textSecondary }}
             >
               {pinStep === 'create'
-                ? 'Enter a 4-6 digit PIN for fallback access'
-                : 'Re-enter your PIN to confirm'}
+                ? t('settings.setPinDescription')
+                : t('settings.confirmPinDescription')}
             </Text>
 
             {pinError ? (
@@ -434,7 +526,7 @@ export default function SettingsScreen() {
                 borderWidth: 1,
                 borderColor: colors.borderSubtle,
               }}
-              placeholder={pinStep === 'confirm' ? 'Re-enter PIN' : 'Enter PIN'}
+              placeholder={pinStep === 'confirm' ? t('settings.pinPlaceholderReenter') : t('settings.pinPlaceholderEnter')}
               placeholderTextColor={colors.textMuted}
               value={pinStep === 'create' ? pinInput : pinConfirm}
               onChangeText={pinStep === 'create' ? setPinInput : setPinConfirm}
@@ -463,7 +555,7 @@ export default function SettingsScreen() {
                 className="text-base font-bold"
                 style={{ color: colors.background }}
               >
-                {pinStep === 'create' ? 'Next' : 'Confirm & Enable'}
+                {pinStep === 'create' ? t('settings.pinNext') : t('settings.pinConfirmEnable')}
               </Text>
             </TouchableOpacity>
 
@@ -478,7 +570,7 @@ export default function SettingsScreen() {
                 className="text-sm"
                 style={{ color: colors.textMuted }}
               >
-                Cancel
+                {t('settings.pinCancel')}
               </Text>
             </TouchableOpacity>
           </View>

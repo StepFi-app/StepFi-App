@@ -53,6 +53,11 @@ Build all shared components from scratch using StepFi's dark theme design system
 - `app/(tabs)/_layout.tsx` — bottom Tabs (pay/invest/settings) with Lucide icons (`CreditCard`, `TrendingUp`, `Settings`), brand-green active tint
 - `app/(tabs)/pay.tsx`, `app/(tabs)/invest.tsx`, `app/(tabs)/settings.tsx` — placeholders
 
+### CI / CD
+- `.github/workflows/eas-build.yml` — automated EAS production build triggered on `v*` tag push; builds Android APK, creates GitHub Release, attaches APK as asset
+- `eas.json` — production profile configured with `android.buildType: apk`
+- `README.md` — release process documented under 🚢 Release Process
+
 ### Verification
 - `npx expo export --platform web` — succeeded (2394 modules bundled, exit 0)
 
@@ -60,7 +65,7 @@ Build all shared components from scratch using StepFi's dark theme design system
 
 ## In Progress
 
-- None currently. Shared components are next.
+- None currently.
 
 ---
 
@@ -87,11 +92,21 @@ Build all shared components from scratch using StepFi's dark theme design system
 16. app/loan/apply.tsx
 
 ### Wallet Integration
-17. WalletConnect v2 — Lobstr and xBull deep link integration
+17. WalletConnect v2 session management: ✅ Completed (Jun 2026)
+    - `services/wallet.service.ts` — SignClient init, session events, health check (60s ping), SecureStore persistence, session recovery
+    - `stores/wallet.store.ts` — Multi-wallet session tracking, active wallet switching, event log, reconnect state
+    - `hooks/useWallet.ts` — React hook with connect/disconnect/switch/sign/recovery, deep link support
+    - `components/wallet/SessionStatus.tsx` — Connection status, health indicator, expire timer, multi-wallet switcher, recovery button
+    - `types/wallet.types.ts` — Enhanced types (WalletSessionInfo, StoredSession, WalletEvent, WalletConnectionStatus)
+    - `constants/config.ts` — Added `WC_PROJECT_ID` from env
+    - `app/_layout.tsx` — Wallet service initialization on boot
+    - Dependencies: `@walletconnect/sign-client`, `@walletconnect/types`
+    - `npx expo export --platform web` — succeeded (3668 modules bundled, exit 0)
 
 ### Deployment
 18. Expo preview build (EAS)
 19. Netlify web build
+20. EAS automated production build pipeline — GitHub Actions workflow triggered on `v*` tag push, builds APK via `eas build`, attaches to GitHub Release
 
 ---
 

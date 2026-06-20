@@ -14,9 +14,11 @@ import { Card } from '../../components/shared/Card';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { useLoansStore } from '../../stores/loans.store';
 import { loansService } from '../../services/loans.service';
+import { useTranslation } from '../../hooks/useTranslation';
+import { formatDate } from '../../src/locales/i18n';
 import type { Loan, LoanStatus } from '../../types/loan.types';
 
-function getStatusConfig(status: LoanStatus): {
+function getStatusConfig(status: LoanStatus, t: (key: string, opts?: any) => string): {
   label: string;
   color: string;
   bg: string;
@@ -24,15 +26,15 @@ function getStatusConfig(status: LoanStatus): {
 } {
   switch (status) {
     case 'active':
-      return { label: 'Active', color: colors.brandBlue, bg: colors.brandBlueDim, icon: Clock };
+      return { label: t('loans.statusActive'), color: colors.brandBlue, bg: colors.brandBlueDim, icon: Clock };
     case 'paid':
-      return { label: 'Paid', color: colors.success, bg: colors.successDim, icon: CheckCircle };
+      return { label: t('loans.statusPaid'), color: colors.success, bg: colors.successDim, icon: CheckCircle };
     case 'defaulted':
-      return { label: 'Defaulted', color: colors.error, bg: colors.errorDim, icon: XCircle };
+      return { label: t('loans.statusDefaulted'), color: colors.error, bg: colors.errorDim, icon: XCircle };
     case 'pending':
-      return { label: 'Pending', color: colors.warning, bg: colors.warningDim, icon: Clock };
+      return { label: t('loans.statusPending'), color: colors.warning, bg: colors.warningDim, icon: Clock };
     case 'cancelled':
-      return { label: 'Cancelled', color: colors.textMuted, bg: colors.subtle, icon: XCircle };
+      return { label: t('loans.statusCancelled'), color: colors.textMuted, bg: colors.subtle, icon: XCircle };
     default:
       return { label: status, color: colors.textMuted, bg: colors.subtle, icon: Clock };
   }
@@ -40,10 +42,11 @@ function getStatusConfig(status: LoanStatus): {
 
 interface LoanCardProps {
   loan: Loan;
+  t: (key: string, opts?: any) => string;
 }
 
-function LoanCard({ loan }: LoanCardProps) {
-  const statusConfig = getStatusConfig(loan.status);
+function LoanCard({ loan, t }: LoanCardProps) {
+  const statusConfig = getStatusConfig(loan.status, t);
   const StatusIcon = statusConfig.icon;
 
   const paidCount = loan.installments.filter((i) => i.paid).length;
@@ -66,14 +69,10 @@ function LoanCard({ loan }: LoanCardProps) {
               className="text-sm font-semibold"
               style={{ color: colors.textPrimary }}
             >
-              Loan #{loan.id.slice(0, 8)}
+              {t('common.loanNumber', { id: loan.id.slice(0, 8) })}
             </Text>
             <Text className="text-xs" style={{ color: colors.textMuted }}>
-              {new Date(loan.createdAt).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
+              {formatDate(new Date(loan.createdAt), 'full')}
             </Text>
           </View>
         </View>
@@ -97,7 +96,7 @@ function LoanCard({ loan }: LoanCardProps) {
       <View className="flex-row items-center justify-between">
         <View>
           <Text className="text-xs" style={{ color: colors.textMuted }}>
-            Total amount
+            {t('loans.totalAmount')}
           </Text>
           <Text
             className="text-lg font-bold"
@@ -108,7 +107,7 @@ function LoanCard({ loan }: LoanCardProps) {
         </View>
         <View className="items-end">
           <Text className="text-xs" style={{ color: colors.textMuted }}>
-            Remaining
+            {t('loans.remaining')}
           </Text>
           <Text
             className="text-lg font-bold"
@@ -123,10 +122,10 @@ function LoanCard({ loan }: LoanCardProps) {
       <View className="gap-1">
         <View className="flex-row items-center justify-between">
           <Text className="text-xs" style={{ color: colors.textMuted }}>
-            Installments
+            {t('loans.installments')}
           </Text>
           <Text className="text-xs" style={{ color: colors.textMuted }}>
-            {paidCount} of {totalCount} paid
+            {t('loans.installmentsPaid', { paid: paidCount, total: totalCount })}
           </Text>
         </View>
         <View
@@ -147,6 +146,7 @@ function LoanCard({ loan }: LoanCardProps) {
 }
 
 export default function LoansScreen() {
+  const { t } = useTranslation();
   const loans = useLoansStore((s) => s.loans);
   const setLoans = useLoansStore((s) => s.setLoans);
   const [isLoading, setIsLoading] = useState(true);
@@ -159,7 +159,7 @@ export default function LoansScreen() {
       const data = await loansService.getMyLoans();
       setLoans(data);
     } catch {
-      setError('Could not load your loans. Please try again.');
+      setError(t('loans.errorLoading'));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -181,11 +181,11 @@ export default function LoansScreen() {
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <EmptyState
           icon={AlertCircle}
-          title="Something went wrong"
-          message={error}
+          title={t('common.somethingWentWrong')}
+          message={error ?? ''}
           iconColor={colors.error}
           iconBackgroundColor={colors.errorDim}
-          action={{ label: 'Try again', onPress: () => { setIsLoading(true); void fetchLoans(); } }}
+          action={{ label: t('common.tryAgain'), onPress: () => { setIsLoading(true); void fetchLoans(); } }}
         />
       </SafeAreaView>
     );
@@ -197,9 +197,9 @@ export default function LoansScreen() {
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <EmptyState
           icon={CreditCard}
-          title="No loans yet"
-          message="Apply for your first loan to finance laptops, courses, and dev tools."
-          action={{ label: 'Apply now', onPress: () => {} }}
+          title={t('loans.noLoansYet')}
+          message={t('loans.noLoansMessage')}
+          action={{ label: t('loans.applyNow'), onPress: () => {} }}
         />
       </SafeAreaView>
     );
@@ -222,7 +222,7 @@ export default function LoansScreen() {
           className="text-2xl font-bold mt-2 mb-6"
           style={{ color: colors.textPrimary }}
         >
-          My Loans
+          {t('loans.myLoans')}
         </Text>
 
         {/* Summary */}
@@ -232,7 +232,7 @@ export default function LoansScreen() {
             style={{ backgroundColor: colors.brandBlueDim }}
           >
             <Text className="text-xs" style={{ color: colors.brandBlue }}>
-              Active
+              {t('loans.active')}
             </Text>
             <Text className="text-lg font-bold" style={{ color: colors.brandBlue }}>
               {loans.filter((l) => l.status === 'active').length}
@@ -243,7 +243,7 @@ export default function LoansScreen() {
             style={{ backgroundColor: colors.successDim }}
           >
             <Text className="text-xs" style={{ color: colors.success }}>
-              Paid
+              {t('loans.paid')}
             </Text>
             <Text className="text-lg font-bold" style={{ color: colors.success }}>
               {loans.filter((l) => l.status === 'paid').length}
@@ -254,7 +254,7 @@ export default function LoansScreen() {
             style={{ backgroundColor: colors.warningDim }}
           >
             <Text className="text-xs" style={{ color: colors.warning }}>
-              Pending
+              {t('loans.pending')}
             </Text>
             <Text className="text-lg font-bold" style={{ color: colors.warning }}>
               {loans.filter((l) => l.status === 'pending').length}
@@ -264,7 +264,7 @@ export default function LoansScreen() {
 
         {/* Loan list */}
         {loans.map((loan) => (
-          <LoanCard key={loan.id} loan={loan} />
+          <LoanCard key={loan.id} loan={loan} t={t} />
         ))}
       </ScrollView>
     </SafeAreaView>
