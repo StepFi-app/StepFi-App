@@ -9,12 +9,19 @@ interface LoansState {
   selectLoan: (id: string) => void;
   clearLoans: () => void;
   setLoading: (loading: boolean) => void;
+  
+  // Persisted simulation state
+  simulatedAmount: number | null;
+  simulatedTerm: number | null;
+  saveSimulation: (amount: number, term: number) => void;
 }
 
 export const useLoansStore = create<LoansState>((set, get) => ({
   loans: [],
   selectedLoan: null,
   isLoading: false,
+  simulatedAmount: null,
+  simulatedTerm: null,
 
   setLoans: (loans) => set({ loans }),
 
@@ -26,4 +33,6 @@ export const useLoansStore = create<LoansState>((set, get) => ({
   clearLoans: () => set({ loans: [], selectedLoan: null }),
 
   setLoading: (isLoading) => set({ isLoading }),
+
+  saveSimulation: (simulatedAmount, simulatedTerm) => set({ simulatedAmount, simulatedTerm }),
 }));
