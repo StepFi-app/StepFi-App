@@ -41,15 +41,19 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="simulate"
-        options={{
-          title: 'Simulate',
-          tabBarIcon: ({ color, size }) => <Calculator color={color} size={size} />,
-        name="calendar"
-        options={{
-          title: t('tabs.calendar'),
-          tabBarIcon: ({ color, size }) => <Calendar color={color} size={size} />,
-        }}
+  name="simulate"
+  options={{
+    title: 'Simulate',
+    tabBarIcon: ({ color, size }) => <Calculator color={color} size={size} />,
+  }}
+/>
+<Tabs.Screen
+  name="calendar"
+  options={{
+    title: t('tabs.calendar'),
+    tabBarIcon: ({ color, size }) => <Calendar color={color} size={size} />,
+  }}
+/>
       />
       <Tabs.Screen
         name="reputation"
