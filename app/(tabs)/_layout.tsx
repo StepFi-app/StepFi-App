@@ -54,7 +54,6 @@ export default function TabsLayout() {
     tabBarIcon: ({ color, size }) => <Calendar color={color} size={size} />,
   }}
 />
-      />
       <Tabs.Screen
         name="reputation"
         options={{

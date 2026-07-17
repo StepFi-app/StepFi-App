@@ -6,11 +6,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Camera } from 'lucide-react-native';
+import { ChevronLeft, Camera, AlertCircle, X } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { Button } from '../../components/shared/Button';
 import { Input } from '../../components/shared/Input';
@@ -31,6 +30,7 @@ export default function RegisterScreen() {
 
   const [displayName, setDisplayName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Learner fields
   const [school, setSchool] = useState('');
@@ -50,6 +50,7 @@ export default function RegisterScreen() {
   const handleComplete = async () => {
     if (!isValid) return;
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
       const profile: LearnerProfile = {
@@ -68,8 +69,10 @@ export default function RegisterScreen() {
       await setTokens('mock-access-token', 'mock-refresh-token');
       await setWallet(publicKey ?? '');
 
-    } catch {
-      // Error handled — user stays on screen
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'An unexpected error occurred while saving your profile.';
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -120,6 +123,25 @@ export default function RegisterScreen() {
                 {t('auth.register.subtitleMatch', { role: isLearner ? t('auth.register.sponsors') : t('auth.register.learners') })}
               </Text>
             </View>
+
+            {/* Error banner */}
+            {submitError && (
+              <View
+                className="rounded-xl p-3 flex-row items-start gap-2 mb-2"
+                style={{ backgroundColor: colors.errorDim }}
+              >
+                <AlertCircle size={16} color={colors.error} style={{ marginTop: 2 }} />
+                <Text className="text-sm flex-1" style={{ color: colors.error }}>
+                  {submitError}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setSubmitError(null)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <X size={16} color={colors.error} />
+                </TouchableOpacity>
+              </View>
+            )}
 
             <View className="flex-col gap-4">
               {/* Avatar Upload Area */}

@@ -7,11 +7,59 @@ import { useConnectivityStore } from '../src/offline/connectivity.store';
 import { enqueueAction } from '../src/offline/offline-queue';
 import type { QueueAction, QueueActionType } from '../src/offline/offline-queue';
 import { addBreadcrumb, captureServiceError } from './sentry';
+import { ApiClientError, ApiErrorCode } from '../types/errors';
+
+// ---------------------------------------------------------------------------
+// Retry & timeout configuration
+// ---------------------------------------------------------------------------
+
+const REQUEST_TIMEOUT_MS = 15_000; // ceiling for all requests
+const MAX_RETRIES = 3;
+const BASE_RETRY_DELAY_MS = 1_000;
+const MAX_RETRY_DELAY_MS = 30_000;
+const JITTER_MAX_MS = 500;
+
+/** HTTP methods that are safe to auto-retry on transient errors */
+const IDEMPOTENT_METHODS = new Set(['get', 'put', 'delete', 'options', 'head']);
+
+// ---------------------------------------------------------------------------
+// Axios instance
+// ---------------------------------------------------------------------------
 
 const api = axios.create({
   baseURL: config.API_BASE_URL,
-  timeout: 10000,
+  timeout: REQUEST_TIMEOUT_MS,
 });
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function isNetworkOrServerError(status: number | undefined): boolean {
+  if (!status) return true; // no response → network error
+  return status >= 500 || status === 429;
+}
+
+function isIdempotentMethod(method: string | undefined): boolean {
+  return IDEMPOTENT_METHODS.has((method ?? 'get').toLowerCase());
+}
+
+/**
+ * Exponential back-off with full jitter.
+ *
+ *   delay = min(cap, base * 2^attempt)
+ *   jitter = random(0, jitterMax)
+ *   final = delay + jitter
+ */
+function backoffDelay(attempt: number): number {
+  const delay = Math.min(MAX_RETRY_DELAY_MS, BASE_RETRY_DELAY_MS * Math.pow(2, attempt));
+  const jitter = Math.random() * JITTER_MAX_MS;
+  return Math.floor(delay + jitter);
+}
+
+// ---------------------------------------------------------------------------
+// Request interceptor
+// ---------------------------------------------------------------------------
 
 api.interceptors.request.use(async (req) => {
   const { accessToken } = useAuthStore.getState();
@@ -20,7 +68,7 @@ api.interceptors.request.use(async (req) => {
     (req.headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
   }
 
-  // Breadcrumb for every outgoing request (URL only, no auth headers)
+  // Breadcrumb for every outgoing request
   addBreadcrumb('http.request', `${req.method?.toUpperCase()} ${req.url}`, {
     baseURL: req.baseURL ?? '',
     timeout: req.timeout ?? 0,
@@ -34,7 +82,7 @@ api.interceptors.request.use(async (req) => {
   const { isConnected } = useConnectivityStore.getState();
   if (isConnected) return req;
 
-  // Offline mitigation queue
+  // Offline – queue mutation for later replay
   const action = await enqueueAction({
     type: getActionType(req.url ?? '', req.method ?? 'POST'),
     endpoint: req.url ?? '',
@@ -49,9 +97,9 @@ api.interceptors.request.use(async (req) => {
   });
 });
 
-interface RetriableRequest extends AxiosRequestConfig {
-  _retry?: boolean;
-}
+// ---------------------------------------------------------------------------
+// Token refresh – shared / deduplicated
+// ---------------------------------------------------------------------------
 
 let refreshInFlight: Promise<string | null> | null = null;
 
@@ -67,7 +115,11 @@ async function performRefresh(): Promise<string | null> {
       accessToken: string;
       refreshToken: string;
       expiresIn: number;
-    }>(`${config.API_BASE_URL}/auth/refresh`, { refreshToken }, { timeout: 10000 });
+    }>(
+      `${config.API_BASE_URL}/auth/refresh`,
+      { refreshToken },
+      { timeout: REQUEST_TIMEOUT_MS },
+    );
     await setTokens(res.data.accessToken, res.data.refreshToken);
     return res.data.accessToken;
   } catch {
@@ -75,6 +127,10 @@ async function performRefresh(): Promise<string | null> {
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Response interceptor
+// ---------------------------------------------------------------------------
 
 api.interceptors.response.use(
   (res) => {
@@ -84,31 +140,30 @@ api.interceptors.response.use(
     }
     return res;
   },
-  async (error: any) => {
-    // Intercept offline-queued mock items immediately
-    if (error?.__offline_queued) {
+  async (error: unknown) => {
+    // Ensure we always have a structured error
+    const axiosError = error as AxiosError & {
+      __offline_queued?: boolean;
+      __action?: QueueAction;
+      config?: AxiosRequestConfig & { _retry?: boolean; _retryCount?: number };
+    };
+
+    // 1. Offline-queued mutations – return a synthetic accepted response
+    if (axiosError.__offline_queued) {
       return {
-        data: { queued: true, actionId: error.__action.id, unsignedXdr: '' },
+        data: { queued: true, actionId: axiosError.__action?.id, unsignedXdr: '' },
         status: 202,
         statusText: 'Accepted (queued offline)',
         headers: {},
-        config: error.config,
+        config: axiosError.config,
       };
     }
 
-    const original = error.config as RetriableRequest | undefined;
-    const status = error.response?.status;
+    const original = axiosError.config;
+    const status = axiosError.response?.status;
+    const method = original?.method?.toLowerCase();
 
-    // Capture non-401 production exceptions to Sentry
-    if (status !== 401) {
-      captureServiceError('api', 'response', error as AxiosError);
-      addBreadcrumb('http.error', `HTTP ${status ?? 'network'} error`, {
-        url: original?.url ?? 'unknown',
-        status: status ?? 0,
-      }, 'error');
-    }
-
-    // Handle Token Expiration Refresh Sequence
+    // 2. Token refresh – 401 handling
     if (status === 401 && original && !original._retry) {
       original._retry = true;
 
@@ -121,8 +176,17 @@ api.interceptors.response.use(
       const newToken = await refreshInFlight;
 
       if (!newToken) {
+        captureServiceError('api', 'refresh_failed', axiosError);
         router.replace('/(auth)/sign-in');
-        return Promise.reject(error);
+        return Promise.reject(
+          new ApiClientError({
+            code: ApiErrorCode.UNAUTHORIZED,
+            statusCode: 401,
+            message: 'Session expired – refresh failed',
+            userMessage: 'Your session has expired. Please sign in again.',
+            cause: axiosError,
+          }),
+        );
       }
 
       original.headers = original.headers ?? {};
@@ -130,17 +194,62 @@ api.interceptors.response.use(
       return api.request(original);
     }
 
-    // Offline read strategy fallback for standard broken GET failures
-    if (original?.method?.toLowerCase() === 'get' && original?.url) {
+    // 3. Exponential backoff retry for transient errors on idempotent methods
+    if (
+      original &&
+      isIdempotentMethod(method) &&
+      isNetworkOrServerError(status) &&
+      (original._retryCount ?? 0) < MAX_RETRIES
+    ) {
+      const attempt = original._retryCount ?? 0;
+      original._retryCount = attempt + 1;
+
+      const delayMs = backoffDelay(attempt);
+
+      addBreadcrumb('http.retry', `Retrying ${method?.toUpperCase()} ${original.url}`, {
+        attempt: attempt + 1,
+        maxRetries: MAX_RETRIES,
+        delayMs,
+        status,
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      return api.request(original);
+    }
+
+    // 4. Capture non-401 errors to Sentry (after retries exhausted)
+    if (status !== 401) {
+      captureServiceError('api', 'response', axiosError);
+      addBreadcrumb(
+        'http.error',
+        `HTTP ${status ?? 'network'} error`,
+        { url: original?.url ?? 'unknown', status: status ?? 0 },
+        'error',
+      );
+    }
+
+    // 5. Offline cache fallback for GET requests
+    if (method === 'get' && original?.url) {
       const cached = await getFromCache(`GET:${original.url}`);
       if (cached !== null) {
-        return { data: cached, status: 200, statusText: 'OK (cached)', headers: {}, config: original };
+        return {
+          data: cached,
+          status: 200,
+          statusText: 'OK (cached)',
+          headers: {},
+          config: original,
+        };
       }
     }
 
-    return Promise.reject(error);
+    // 6. Wrap into typed ApiClientError before rejecting
+    return Promise.reject(ApiClientError.fromAxiosError(axiosError));
   },
 );
+
+// ---------------------------------------------------------------------------
+// Queue action type resolver
+// ---------------------------------------------------------------------------
 
 function getActionType(url: string, method: string): QueueActionType {
   if (url.includes('/repay-installment')) return 'REPAY_INSTALLMENT';
