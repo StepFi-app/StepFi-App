@@ -4,6 +4,12 @@ Update this file after every completed screen, component, hook, or architectural
 
 ---
 
+## 2026-07-20 - Development paused
+
+StepFi-App is temporarily paused for all repos except critical fixes. Reason: maintainer is setting up Android Studio to properly monitor and screen-record all future changes to this repo before accepting them. Going forward, every PR to StepFi-App must include screenshots or a screen recording demonstrating the change running on an actual Android emulator/device, not just passing `npx expo export --platform web`. This repo will resume active issue creation and review once the Android Studio verification workflow is established.
+
+---
+
 ## Current Phase
 
 **Phase 2 — Wallet Integration**
