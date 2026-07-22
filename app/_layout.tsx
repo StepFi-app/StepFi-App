@@ -88,14 +88,20 @@ function RootLayout() {
     clearIdleTimer();
     idleTimerRef.current = setTimeout(() => {
       if (useAuthStore.getState().isAuthenticated) {
-        useSecurityStore.getState().lock();
+        void useSecurityStore.getState().lock();
       }
     }, IDLE_TIMEOUT_MS);
   }, [clearIdleTimer]);
 
   useEffect(() => {
-    void hydrate();
-    void useUserStore.getState().hydrate();
+    async function hydrateAll() {
+      await Promise.all([
+        hydrate(),
+        useUserStore.getState().hydrate(),
+        useSecurityStore.getState().hydrate(),
+      ]);
+    }
+    hydrateAll();
     initPromise.then(() => setI18nReady(true));
   }, [hydrate]);
 
@@ -105,15 +111,15 @@ function RootLayout() {
   useEffect(() => {
     if (!isLoading && isAuthenticated && !biometricCheckDone) {
       useSecurityStore.getState().markBiometricCheckDone();
-      biometricService.isBiometricsEnabled().then((enabled) => {
+      biometricService.isBiometricsEnabled().then(async (enabled) => {
         if (enabled) {
-          useSecurityStore.getState().lock();
+          await useSecurityStore.getState().lock();
         }
       });
     }
 
     if (!isAuthenticated) {
-      useSecurityStore.getState().reset();
+      void useSecurityStore.getState().reset();
     }
   }, [isLoading, isAuthenticated, biometricCheckDone]);
 
@@ -127,7 +133,7 @@ function RootLayout() {
           elapsed >= IDLE_TIMEOUT_MS &&
           useAuthStore.getState().isAuthenticated
         ) {
-          useSecurityStore.getState().lock();
+          void useSecurityStore.getState().lock();
         }
         if (!useSecurityStore.getState().isLocked) {
           startIdleTimer();
@@ -135,6 +141,8 @@ function RootLayout() {
       } else if (state === 'background' || state === 'inactive') {
         lastActiveRef.current = Date.now();
         clearIdleTimer();
+        // Persist lastActiveAt so kill-during-background is detected on next cold start
+        void useSecurityStore.getState().recordActivity();
       }
     });
 
