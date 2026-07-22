@@ -30,7 +30,10 @@ export async function processQueue(): Promise<void> {
         method: action.method,
         url: action.endpoint,
         data: action.data,
-        headers: { 'X-Offline-Sync': 'true' },
+        headers: {
+          'X-Offline-Sync': 'true',
+          'Idempotency-Key': action.idempotencyKey,
+        },
       });
       await dequeueAction(action.id);
     } catch (error) {
