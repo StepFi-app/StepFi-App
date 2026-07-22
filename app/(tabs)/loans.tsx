@@ -7,7 +7,8 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  ChevronRight,
+  Loader,
+  RefreshCw,
 } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { Card } from '../../components/shared/Card';
@@ -16,7 +17,9 @@ import { useLoansStore } from '../../stores/loans.store';
 import { loansService } from '../../services/loans.service';
 import { useTranslation } from '../../hooks/useTranslation';
 import { formatDate } from '../../src/locales/i18n';
+import { pendingQueue } from '../../src/transactions/pending-queue';
 import type { Loan, LoanStatus } from '../../types/loan.types';
+import type { PendingTransaction } from '../../types/transaction.types';
 
 function getStatusConfig(status: LoanStatus, t: (key: string, opts?: any) => string): {
   label: string;
@@ -38,6 +41,28 @@ function getStatusConfig(status: LoanStatus, t: (key: string, opts?: any) => str
     default:
       return { label: status, color: colors.textMuted, bg: colors.subtle, icon: Clock };
   }
+}
+
+/** Small badge showing if a loan has a pending on-chain tx. */
+function PendingTxBadge({ loanId }: { loanId: string }) {
+  const pendingTransactions = useLoansStore((s) => s.pendingTransactions);
+  const loanPendingTxs = pendingTransactions.filter(
+    (tx) => tx.targetLoanId === loanId && tx.status === 'pending',
+  );
+
+  if (loanPendingTxs.length === 0) return null;
+
+  return (
+    <View
+      className="flex-row items-center gap-1 rounded-lg px-2 py-0.5"
+      style={{ backgroundColor: colors.warningDim }}
+    >
+      <Loader size={10} color={colors.warning} />
+      <Text className="text-[10px] font-semibold" style={{ color: colors.warning }}>
+        {loanPendingTxs.length} pending
+      </Text>
+    </View>
+  );
 }
 
 interface LoanCardProps {
@@ -77,18 +102,21 @@ function LoanCard({ loan, t }: LoanCardProps) {
           </View>
         </View>
 
-        {/* Status badge */}
-        <View
-          className="flex-row items-center gap-1 rounded-xl px-3 py-1"
-          style={{ backgroundColor: statusConfig.bg }}
-        >
-          <StatusIcon size={12} color={statusConfig.color} />
-          <Text
-            className="text-xs font-semibold"
-            style={{ color: statusConfig.color }}
+        {/* Status badge + pending indicator */}
+        <View className="flex-row items-center gap-2">
+          <PendingTxBadge loanId={loan.id} />
+          <View
+            className="flex-row items-center gap-1 rounded-xl px-3 py-1"
+            style={{ backgroundColor: statusConfig.bg }}
           >
-            {statusConfig.label}
-          </Text>
+            <StatusIcon size={12} color={statusConfig.color} />
+            <Text
+              className="text-xs font-semibold"
+              style={{ color: statusConfig.color }}
+            >
+              {statusConfig.label}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -149,26 +177,41 @@ export default function LoansScreen() {
   const { t } = useTranslation();
   const loans = useLoansStore((s) => s.loans);
   const setLoans = useLoansStore((s) => s.setLoans);
+  const pendingTransactions = useLoansStore((s) => s.pendingTransactions);
+  const setPendingTransactions = useLoansStore((s) => s.setPendingTransactions);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync pending txs from the persisted queue on mount
+  const syncPendingTxs = useCallback(async () => {
+    const pendings = await pendingQueue.getAll();
+    setPendingTransactions(pendings);
+  }, [setPendingTransactions]);
 
   const fetchLoans = useCallback(async () => {
     setError(null);
     try {
       const data = await loansService.getMyLoans();
       setLoans(data);
+      await syncPendingTxs();
     } catch {
       setError(t('loans.errorLoading'));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [setLoans]);
+  }, [setLoans, syncPendingTxs]);
 
   useEffect(() => {
     void fetchLoans();
   }, [fetchLoans]);
+
+  // Re-sync pending txs periodically and whenever local count changes
+  useEffect(() => {
+    const interval = setInterval(syncPendingTxs, 5000);
+    return () => clearInterval(interval);
+  }, [syncPendingTxs]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -205,6 +248,12 @@ export default function LoansScreen() {
     );
   }
 
+  const pendingCount = pendingTransactions.filter((tx) => tx.status === 'pending').length;
+  const recentCompleted = pendingTransactions
+    .filter((tx) => tx.status !== 'pending')
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, 5);
+
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       <ScrollView
@@ -224,6 +273,64 @@ export default function LoansScreen() {
         >
           {t('loans.myLoans')}
         </Text>
+
+        {/* Pending Transactions Banner */}
+        {pendingCount > 0 && (
+          <View
+            className="rounded-xl p-4 mb-4 flex-row items-center gap-3 border"
+            style={{
+              backgroundColor: colors.warningDim,
+              borderColor: colors.warning + '40',
+            }}
+          >
+            <View
+              className="h-10 w-10 rounded-xl items-center justify-center"
+              style={{ backgroundColor: colors.warning + '20' }}
+            >
+              <Loader size={20} color={colors.warning} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-semibold" style={{ color: colors.warning }}>
+                Transactions In Progress
+              </Text>
+              <Text className="text-xs mt-0.5" style={{ color: colors.textSecondary }}>
+                {pendingCount} pending transaction(s) — status being tracked on-chain
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Recent Completed Transactions */}
+        {recentCompleted.length > 0 && (
+          <View
+            className="rounded-xl p-3 mb-4 gap-1.5"
+            style={{ backgroundColor: colors.subtle }}
+          >
+            <Text className="text-xs font-semibold mb-1" style={{ color: colors.textMuted }}>
+              Recent Transaction Activity
+            </Text>
+            {recentCompleted.map((tx) => {
+              const isConfirmed = tx.status === 'confirmed';
+              const StatusIcon = isConfirmed ? CheckCircle : XCircle;
+              const statusColor = isConfirmed ? colors.success : colors.error;
+              return (
+                <View
+                  key={tx.id}
+                  className="flex-row items-center gap-2 py-1.5"
+                >
+                  <StatusIcon size={14} color={statusColor} />
+                  <Text className="text-xs flex-1" style={{ color: colors.textSecondary }}>
+                    {tx.type === 'REPAYMENT' ? 'Repayment' : tx.type === 'LOAN_CREATION' ? 'Loan' : tx.type}
+                    {tx.amount ? ` — $${tx.amount.toLocaleString()}` : ''}
+                  </Text>
+                  <Text className="text-[10px]" style={{ color: statusColor }}>
+                    {isConfirmed ? 'Confirmed' : tx.status === 'expired' ? 'Expired' : 'Failed'}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         {/* Summary */}
         <View className="flex-row gap-3 mb-5">

@@ -19,6 +19,13 @@ import {
   addBreadcrumb,
   Sentry,
 } from '../services/sentry';
+import {
+  startTxPoller,
+  stopTxPoller,
+  reconcilePendingTxs,
+} from '../src/transactions/transaction-poller';
+import { pendingQueue } from '../src/transactions/pending-queue';
+import { useLoansStore } from '../stores/loans.store';
 import '../global.css';
 
 // Initialise Sentry as early as possible (module‑level, before any component)
@@ -132,6 +139,11 @@ function RootLayout() {
         if (!useSecurityStore.getState().isLocked) {
           startIdleTimer();
         }
+
+        // Reconcile any pending transactions when the app comes to foreground
+        if (useAuthStore.getState().isAuthenticated) {
+          reconcilePendingTxs().catch(() => {});
+        }
       } else if (state === 'background' || state === 'inactive') {
         lastActiveRef.current = Date.now();
         clearIdleTimer();
@@ -146,6 +158,25 @@ function RootLayout() {
       startIdleTimer();
     }
   }, [isLocked, isAuthenticated, startIdleTimer]);
+
+  // ─── Transaction poller lifecycle ─────────────────────────────────────
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      startTxPoller();
+    }
+    return () => {
+      stopTxPoller();
+    };
+  }, [isLoading, isAuthenticated]);
+
+  // ─── Pending‑tx sync on store hydration ───────────────────────────────
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      pendingQueue.getAll().then((all) => {
+        useLoansStore.getState().setPendingTransactions(all);
+      });
+    }
+  }, [isLoading, isAuthenticated]);
 
   const prevConnectedRef = useRef(true);
 
