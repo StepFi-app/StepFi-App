@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,59 +9,101 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../constants/colors';
 import { biometricService } from '../security/biometric.service';
 import { useSecurityStore } from '../security/security.store';
-import { useAuthStore } from '../../stores/auth.store';
-import { useUserStore } from '../../stores/user.store';
-import { useWalletStore } from '../../stores/wallet.store';
+import { signOutService } from '../../services/sign-out.service';
 
-const MAX_FAILED_ATTEMPTS = 3;
+type GateMode = 'loading' | 'biometric' | 'pin' | 'lockout' | 'error';
 
-type GateMode = 'loading' | 'biometric' | 'pin' | 'error';
+/** Format remaining ms as "Xm Ys" */
+function formatCountdown(ms: number): string {
+  const totalSeconds = Math.ceil(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
+}
 
 export function BiometricGate() {
   const [mode, setMode] = useState<GateMode>('loading');
   const [pin, setPin] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [lockoutCountdown, setLockoutCountdown] = useState('');
 
   const unlock = useSecurityStore((s) => s.unlock);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const clearAuth = useAuthStore((s) => s.clearAuth);
-  const clearUser = useUserStore((s) => s.clearUser);
-  const setDisconnected = useWalletStore((s) => s.setDisconnected);
+  const clearCountdownTimer = useCallback(() => {
+    if (countdownRef.current !== null) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+  }, []);
 
   const handleLogout = useCallback(async () => {
-    setDisconnected();
-    clearUser();
-    await clearAuth();
-  }, [clearAuth, clearUser, setDisconnected]);
+    clearCountdownTimer();
+    try {
+      await signOutService.signOut();
+    } catch {
+      // Best-effort teardown
+    }
+  }, [clearCountdownTimer]);
+
+  const startLockoutCountdown = useCallback(() => {
+    clearCountdownTimer();
+    setMode('lockout');
+
+    const tick = () => {
+      const remaining = useSecurityStore.getState().getLockoutRemainingMs();
+      if (remaining <= 0) {
+        clearCountdownTimer();
+        setLockoutCountdown('');
+        setMode('pin');
+        setErrorMessage('');
+        return;
+      }
+      setLockoutCountdown(formatCountdown(remaining));
+    };
+
+    tick(); // immediate first tick
+    countdownRef.current = setInterval(tick, 1000);
+  }, [clearCountdownTimer]);
 
   const handleFailure = useCallback(async () => {
-    const store = useSecurityStore.getState();
-    const newCount = store.failedAttempts + 1;
-    store.incrementFailedAttempts();
-    if (newCount >= MAX_FAILED_ATTEMPTS) {
-      await handleLogout();
+    await useSecurityStore.getState().incrementFailedAttempts();
+
+    // Check if we're now in lockout
+    if (useSecurityStore.getState().getIsLockedOut()) {
+      startLockoutCountdown();
     } else {
-      const remaining = MAX_FAILED_ATTEMPTS - newCount;
+      const { failedAttempts } = useSecurityStore.getState();
+      const remaining = Math.max(0, 6 - failedAttempts); // show remaining before max lockout
       setErrorMessage(
-        `Verification failed. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`,
+        `Verification failed. ${remaining} attempt${remaining !== 1 ? 's' : ''} before lockout.`,
       );
     }
-  }, [handleLogout]);
+  }, [startLockoutCountdown]);
 
-  const handleSuccess = useCallback(() => {
+  const handleSuccess = useCallback(async () => {
+    clearCountdownTimer();
     setPin('');
     setErrorMessage('');
-    unlock();
-  }, [unlock]);
+    await unlock();
+  }, [unlock, clearCountdownTimer]);
 
   const tryBiometric = useCallback(async () => {
     const result = await biometricService.authenticateBiometric();
     if (result.success) {
-      handleSuccess();
+      await handleSuccess();
     } else {
       const hasPinSet = await biometricService.hasPin();
       if (hasPinSet) {
-        setMode('pin');
+        // Check lockout before allowing PIN entry
+        if (useSecurityStore.getState().getIsLockedOut()) {
+          startLockoutCountdown();
+        } else {
+          setMode('pin');
+        }
         if (
           result.error !== 'user_cancel' &&
           result.error !== 'USER_CANCELED'
@@ -73,12 +115,18 @@ export function BiometricGate() {
         setErrorMessage('Biometric failed and no PIN is configured.');
       }
     }
-  }, [handleSuccess, handleFailure]);
+  }, [handleSuccess, handleFailure, startLockoutCountdown]);
 
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
+      // Check if already in lockout
+      if (useSecurityStore.getState().getIsLockedOut()) {
+        if (!cancelled) startLockoutCountdown();
+        return;
+      }
+
       const { isAvailable, isEnrolled } =
         await biometricService.checkBiometricAvailability();
 
@@ -105,22 +153,30 @@ export function BiometricGate() {
 
     return () => {
       cancelled = true;
+      clearCountdownTimer();
     };
-  }, [tryBiometric]);
+  }, [tryBiometric, startLockoutCountdown, clearCountdownTimer]);
 
   const handlePinSubmit = useCallback(async () => {
     if (pin.length < 4) return;
     setErrorMessage('');
 
+    // Double-check lockout before verifying
+    if (useSecurityStore.getState().getIsLockedOut()) {
+      startLockoutCountdown();
+      return;
+    }
+
     const isValid = await biometricService.verifyPin(pin);
     if (isValid) {
-      handleSuccess();
+      await handleSuccess();
     } else {
       setPin('');
       await handleFailure();
     }
-  }, [pin, handleSuccess, handleFailure]);
+  }, [pin, handleSuccess, handleFailure, startLockoutCountdown]);
 
+  // ── Loading ──
   if (mode === 'loading') {
     return (
       <SafeAreaView
@@ -132,6 +188,7 @@ export function BiometricGate() {
     );
   }
 
+  // ── Biometric prompt ──
   if (mode === 'biometric') {
     return (
       <SafeAreaView
@@ -145,6 +202,57 @@ export function BiometricGate() {
     );
   }
 
+  // ── Lockout screen ──
+  if (mode === 'lockout') {
+    return (
+      <SafeAreaView
+        className="flex-1"
+        style={{ backgroundColor: colors.background }}
+      >
+        <View className="flex-1 items-center justify-center px-8 gap-5">
+          <Text
+            className="text-2xl font-bold"
+            style={{ color: colors.textPrimary }}
+          >
+            Too Many Attempts
+          </Text>
+
+          <Text
+            className="text-sm text-center"
+            style={{ color: colors.textSecondary }}
+          >
+            Please wait before trying again.
+          </Text>
+
+          <View
+            className="rounded-2xl px-8 py-5 items-center"
+            style={{ backgroundColor: colors.warningDim }}
+          >
+            <Text
+              className="text-3xl font-bold font-mono"
+              style={{ color: colors.warning }}
+            >
+              {lockoutCountdown}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            className="py-3 mt-4"
+            onPress={handleLogout}
+          >
+            <Text
+              className="text-sm"
+              style={{ color: colors.textMuted }}
+            >
+              Sign out
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── PIN entry / error ──
   return (
     <SafeAreaView
       className="flex-1"

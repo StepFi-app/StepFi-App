@@ -27,8 +27,8 @@ import { colors } from '../../constants/colors';
 import { Card } from '../../components/shared/Card';
 import { useAuthStore } from '../../stores/auth.store';
 import { useUserStore } from '../../stores/user.store';
-import { useWalletStore } from '../../stores/wallet.store';
 import { biometricService } from '../../src/security/biometric.service';
+import { signOutService } from '../../services/sign-out.service';
 import { useTranslation } from '../../hooks/useTranslation';
 
 interface MenuItemProps {
@@ -90,12 +90,10 @@ const LANGUAGES = [
 
 export default function SettingsScreen() {
   const { t, currentLanguage, changeLanguage } = useTranslation();
-  const clearAuth = useAuthStore((s) => s.clearAuth);
   const walletAddress = useAuthStore((s) => s.walletAddress);
   const profile = useUserStore((s) => s.profile);
-  const clearUser = useUserStore((s) => s.clearUser);
-  const setDisconnected = useWalletStore((s) => s.setDisconnected);
   const [copied, setCopied] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
   const [biometricsAvailable, setBiometricsAvailable] = useState(false);
@@ -139,9 +137,14 @@ export default function SettingsScreen() {
           text: t('settings.signOutConfirm'),
           style: 'destructive',
           onPress: async () => {
-            setDisconnected();
-            clearUser();
-            await clearAuth();
+            setIsSigningOut(true);
+            try {
+              await signOutService.signOut();
+            } catch {
+              // Teardown is best-effort; auth will still be cleared
+            } finally {
+              setIsSigningOut(false);
+            }
           },
         },
       ],
