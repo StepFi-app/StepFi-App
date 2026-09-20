@@ -21,7 +21,7 @@ jest.mock('../../../services/transactions.service', () => ({
 function createMockWalletState(overrides: Record<string, unknown> = {}) {
   return {
     isConnected: true,
-    publicKey: 'GABCDEF123456789',
+    address: 'GABCDEF123456789',
     isSigning: false,
     setSigning: jest.fn(),
     signXdr: jest.fn().mockResolvedValue('signed-xdr-base64'),
@@ -37,7 +37,7 @@ describe('TransactionSigner', () => {
   describe('signAndBroadcast', () => {
     it('throws WALLET_NOT_CONNECTED when wallet is not connected', async () => {
       mockGetState.mockReturnValue(
-        createMockWalletState({ isConnected: false, publicKey: null }),
+        createMockWalletState({ isConnected: false, address: null }),
       );
 
       const { transactionSigner: signer } = await import(
@@ -52,9 +52,9 @@ describe('TransactionSigner', () => {
       });
     });
 
-    it('throws WALLET_NOT_CONNECTED when publicKey is null', async () => {
+    it('throws WALLET_NOT_CONNECTED when address is null', async () => {
       mockGetState.mockReturnValue(
-        createMockWalletState({ publicKey: null }),
+        createMockWalletState({ address: null }),
       );
 
       const { transactionSigner: signer } = await import(
