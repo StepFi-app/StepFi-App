@@ -28,6 +28,7 @@ interface WalletState {
   signXdr: (xdr: string) => Promise<string>;
   hydrate: () => Promise<void>;
   clearError: () => void;
+  setSigning: (isSigning: boolean) => void;
 }
 
 export const useWalletStore = create<WalletState>((set, get) => ({
@@ -41,6 +42,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   pairingUri: null,
 
   clearError: () => set({ error: null }),
+  setSigning: (isSigning) => set({ isSigning }),
 
   connectFreighter: async () => {
     set({ isConnecting: true, error: null, pairingUri: null });
