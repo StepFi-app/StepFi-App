@@ -107,7 +107,7 @@ class TransactionSignerService {
   async signAndBroadcast(unsignedXdr: string): Promise<TransactionResult> {
     const walletState = useWalletStore.getState();
 
-    if (!walletState.isConnected || !walletState.publicKey) {
+    if (!walletState.isConnected || !walletState.address) {
       throw new TransactionError(
         TransactionErrorCode.WALLET_NOT_CONNECTED,
         'Wallet is not connected. Please connect your wallet first.',
