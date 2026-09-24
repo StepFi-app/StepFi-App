@@ -11,9 +11,7 @@ function ErrorFallback({ resetError }: FallbackProps) {
     <View style={styles.container}>
       <Text style={styles.emoji}>⚠️</Text>
       <Text style={styles.title}>Something went wrong</Text>
-      <Text style={styles.subtitle}>
-        An unexpected error occurred. Our team has been notified.
-      </Text>
+      <Text style={styles.subtitle}>An unexpected error occurred. Our team has been notified.</Text>
       <Pressable style={styles.button} onPress={resetError}>
         <Text style={styles.buttonText}>Reload App</Text>
       </Pressable>
@@ -29,8 +27,7 @@ export function SentryErrorBoundary({ children }: Props) {
   return (
     <Sentry.ErrorBoundary
       fallback={({ resetError }) => <ErrorFallback resetError={resetError} />}
-      showDialog={false}
-    >
+      showDialog={false}>
       {children}
     </Sentry.ErrorBoundary>
   );

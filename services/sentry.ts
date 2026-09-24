@@ -120,7 +120,7 @@ export function addBreadcrumb(
   category: string,
   message: string,
   data?: Record<string, unknown>,
-  level: Sentry.SeverityLevel = 'info',
+  level: Sentry.SeverityLevel = 'info'
 ): void {
   Sentry.addBreadcrumb({
     category,
@@ -136,11 +136,7 @@ export function addBreadcrumb(
  * Capture a service‑layer error with useful tags so errors can be filtered
  * by service name and operation in the Sentry dashboard.
  */
-export function captureServiceError(
-  service: string,
-  operation: string,
-  error: unknown,
-): void {
+export function captureServiceError(service: string, operation: string, error: unknown): void {
   Sentry.withScope((scope) => {
     scope.setTag('service', service);
     scope.setTag('operation', operation);

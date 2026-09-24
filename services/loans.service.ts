@@ -72,7 +72,7 @@ export const loansService = {
   async repayInstallment(
     loanId: string,
     installmentIndex: number,
-    amount: number,
+    amount: number
   ): Promise<UnsignedXdrResponse> {
     addBreadcrumb('loans.service', 'Repaying installment', {
       loanId,

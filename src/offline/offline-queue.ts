@@ -32,7 +32,7 @@ export async function getQueue(): Promise<QueueAction[]> {
 }
 
 export async function enqueueAction(
-  action: Omit<QueueAction, 'id' | 'timestamp'>,
+  action: Omit<QueueAction, 'id' | 'timestamp'>
 ): Promise<QueueAction> {
   const queue = await getQueue();
   const newAction: QueueAction = {

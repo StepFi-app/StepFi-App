@@ -32,7 +32,7 @@ const CreateAccountScreen = ({ navigation }: any) => {
           accessibilityLabel="Go back">
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-text">Create Account</Text>
+        <Text className="text-text text-xl font-bold">Create Account</Text>
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -70,7 +70,7 @@ const CreateAccountScreen = ({ navigation }: any) => {
                 placeholderTextColor={colors.placeholder}
                 value={walletAddress}
                 onChangeText={handleWalletAddressChange}
-                className="ml-3 flex-1 text-base text-text"
+                className="text-text ml-3 flex-1 text-base"
                 autoCapitalize="characters"
                 accessibilityLabel="Wallet address input"
               />
@@ -85,13 +85,13 @@ const CreateAccountScreen = ({ navigation }: any) => {
             <Text className="mb-2 text-sm text-textMuted">Username</Text>
             <View className="flex-row items-center rounded-xl bg-white px-4 py-4 shadow-sm">
               <Ionicons name="person-outline" size={20} color={colors.textMuted} className="mr-3" />
-              <Text className="ml-3 text-base text-text">@</Text>
+              <Text className="text-text ml-3 text-base">@</Text>
               <TextInput
                 placeholder="josue_crypto"
                 placeholderTextColor={colors.placeholder}
                 value={username}
                 onChangeText={handleUsernameChange}
-                className="ml-1 flex-1 text-base text-text"
+                className="text-text ml-1 flex-1 text-base"
                 autoCapitalize="none"
                 accessibilityLabel="Username input"
               />
@@ -111,7 +111,7 @@ const CreateAccountScreen = ({ navigation }: any) => {
                 placeholderTextColor={colors.placeholder}
                 value={displayName}
                 onChangeText={handleDisplayNameChange}
-                className="ml-3 flex-1 text-base text-text"
+                className="text-text ml-3 flex-1 text-base"
                 accessibilityLabel="Display name input"
               />
             </View>
@@ -121,8 +121,8 @@ const CreateAccountScreen = ({ navigation }: any) => {
           </View>
 
           {/* Info Box */}
-          <View className="mb-6 flex-row rounded-xl bg-primarySoft p-4">
-            <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primaryTint">
+          <View className="bg-primarySoft mb-6 flex-row rounded-xl p-4">
+            <View className="bg-primaryTint mr-3 h-10 w-10 items-center justify-center rounded-full">
               <Ionicons name="information" size={24} color="white" />
             </View>
             <View className="flex-1">
@@ -188,19 +188,19 @@ const CreateAccountScreen = ({ navigation }: any) => {
       </ScrollView>
 
       {/* Success Notification */}
-        {showSuccess && (
-          <View className="absolute left-6 right-6 top-20 flex-row items-center rounded-xl bg-success p-4 shadow-lg">
-            <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white">
-              <Ionicons name="checkmark-circle" size={28} color={colors.success} />
-            </View>
-            <View className="flex-1">
-              <Text className="mb-1 text-base font-bold text-white">
-                Account Created Successfully!
-              </Text>
-              <Text className="text-sm text-white">Welcome to StepFi, @{username}</Text>
-            </View>
+      {showSuccess && (
+        <View className="absolute left-6 right-6 top-20 flex-row items-center rounded-xl bg-success p-4 shadow-lg">
+          <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white">
+            <Ionicons name="checkmark-circle" size={28} color={colors.success} />
           </View>
-        )}
+          <View className="flex-1">
+            <Text className="mb-1 text-base font-bold text-white">
+              Account Created Successfully!
+            </Text>
+            <Text className="text-sm text-white">Welcome to StepFi, @{username}</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 };

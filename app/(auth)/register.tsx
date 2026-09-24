@@ -27,7 +27,7 @@ export default function RegisterScreen() {
   const setProfile = useUserStore((s) => s.setProfile);
   const setTokens = useAuthStore((s) => s.setTokens);
   const setWallet = useAuthStore((s) => s.setWallet);
-  const publicKey = useWalletStore((s) => s.publicKey);
+  const publicKey = useWalletStore((s) => s.address);
 
   const [displayName, setDisplayName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,7 +67,6 @@ export default function RegisterScreen() {
 
       await setTokens('mock-access-token', 'mock-refresh-token');
       await setWallet(publicKey ?? '');
-
     } catch {
       // Error handled — user stays on screen
     } finally {
@@ -79,27 +78,32 @@ export default function RegisterScreen() {
     <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         {/* Header with back button and progress bar */}
-        <View className="flex-row items-center justify-between px-4 h-16 w-full z-50">
+        <View className="z-50 h-16 w-full flex-row items-center justify-between px-4">
           <TouchableOpacity
             onPress={() => router.back()}
             activeOpacity={0.7}
-            className="flex items-center justify-center w-10 h-10 rounded-full"
-            style={{ backgroundColor: 'transparent' }}
-          >
+            className="flex h-10 w-10 items-center justify-center rounded-full"
+            style={{ backgroundColor: 'transparent' }}>
             <ChevronLeft size={24} color={colors.textPrimary} />
           </TouchableOpacity>
 
           <View className="flex-row gap-2">
-            <View className="w-12 h-1 rounded-full overflow-hidden" style={{ backgroundColor: colors.subtle }}>
-              <View className="w-full h-full" style={{ backgroundColor: colors.primary }} />
+            <View
+              className="h-1 w-12 overflow-hidden rounded-full"
+              style={{ backgroundColor: colors.subtle }}>
+              <View className="h-full w-full" style={{ backgroundColor: colors.primary }} />
             </View>
-            <View className="w-12 h-1 rounded-full overflow-hidden" style={{ backgroundColor: colors.subtle }}>
-              <View className="w-1/2 h-full" style={{ backgroundColor: colors.primary }} />
+            <View
+              className="h-1 w-12 overflow-hidden rounded-full"
+              style={{ backgroundColor: colors.subtle }}>
+              <View className="h-full w-1/2" style={{ backgroundColor: colors.primary }} />
             </View>
-            <View className="w-12 h-1 rounded-full overflow-hidden" style={{ backgroundColor: colors.subtle }} />
+            <View
+              className="h-1 w-12 overflow-hidden rounded-full"
+              style={{ backgroundColor: colors.subtle }}
+            />
           </View>
 
           <View className="w-10" />
@@ -108,27 +112,31 @@ export default function RegisterScreen() {
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 100 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="w-full max-w-md mx-auto">
+          keyboardShouldPersistTaps="handled">
+          <View className="mx-auto w-full max-w-md">
             {/* Headers */}
             <View className="mb-6">
-              <Text className="text-[32px] font-bold mb-2" style={{ color: colors.textPrimary }}>
+              <Text className="mb-2 text-[32px] font-bold" style={{ color: colors.textPrimary }}>
                 {t('auth.register.title')}
               </Text>
               <Text className="text-[16px]" style={{ color: colors.textSecondary }}>
-                {t('auth.register.subtitleMatch', { role: isLearner ? t('auth.register.sponsors') : t('auth.register.learners') })}
+                {t('auth.register.subtitleMatch', {
+                  role: isLearner ? t('auth.register.sponsors') : t('auth.register.learners'),
+                })}
               </Text>
             </View>
 
             <View className="flex-col gap-4">
               {/* Avatar Upload Area */}
-              <View className="flex-col items-center justify-center mb-4 mt-2">
+              <View className="mb-4 mt-2 flex-col items-center justify-center">
                 <TouchableOpacity
-                  className="relative w-24 h-24 rounded-full overflow-hidden mb-2 items-center justify-center"
-                  style={{ backgroundColor: colors.subtle, borderWidth: 2, borderColor: colors.borderSubtle }}
-                  activeOpacity={0.8}
-                >
+                  className="relative mb-2 h-24 w-24 items-center justify-center overflow-hidden rounded-full"
+                  style={{
+                    backgroundColor: colors.subtle,
+                    borderWidth: 2,
+                    borderColor: colors.borderSubtle,
+                  }}
+                  activeOpacity={0.8}>
                   <Camera size={32} color={colors.textSecondary} />
                 </TouchableOpacity>
                 <TouchableOpacity activeOpacity={0.7}>
@@ -187,23 +195,21 @@ export default function RegisterScreen() {
               )}
 
               {/* Wallet address display */}
-              <View className="gap-1 mt-2">
+              <View className="mt-2 gap-1">
                 <Text className="text-[14px]" style={{ color: colors.textSecondary }}>
                   {t('auth.register.walletAddress')}
                 </Text>
                 <View
-                  className="h-12 rounded-xl px-4 justify-center"
+                  className="h-12 justify-center rounded-xl px-4"
                   style={{
                     backgroundColor: colors.subtle,
                     borderWidth: 1,
                     borderColor: colors.borderSubtle,
-                  }}
-                >
+                  }}>
                   <Text
                     className="text-[14px]"
                     style={{ color: colors.textMuted }}
-                    numberOfLines={1}
-                  >
+                    numberOfLines={1}>
                     {publicKey
                       ? `${publicKey.slice(0, 8)}...${publicKey.slice(-8)}`
                       : t('auth.register.notConnected')}
@@ -215,22 +221,20 @@ export default function RegisterScreen() {
         </ScrollView>
 
         {/* Bottom Fixed Action Area */}
-        <View 
+        <View
           className="absolute bottom-0 left-0 w-full px-4 py-4"
-          style={{ 
-            backgroundColor: `${colors.background}E6`, 
-            borderTopWidth: 1, 
-            borderTopColor: colors.borderSubtle 
-          }}
-        >
-          <View className="w-full max-w-md mx-auto">
+          style={{
+            backgroundColor: `${colors.background}E6`,
+            borderTopWidth: 1,
+            borderTopColor: colors.borderSubtle,
+          }}>
+          <View className="mx-auto w-full max-w-md">
             <TouchableOpacity
-              className="w-full py-4 rounded-xl items-center justify-center"
+              className="w-full items-center justify-center rounded-xl py-4"
               style={{ backgroundColor: colors.primaryContainer, opacity: isValid ? 1 : 0.5 }}
               activeOpacity={0.8}
               onPress={handleComplete}
-              disabled={!isValid || isSubmitting}
-            >
+              disabled={!isValid || isSubmitting}>
               <Text className="text-[14px] font-bold" style={{ color: colors.background }}>
                 {isSubmitting ? t('auth.register.saving') : t('auth.register.continue')}
               </Text>

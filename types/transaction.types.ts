@@ -21,7 +21,7 @@ export class TransactionError extends Error {
   constructor(
     public readonly code: TransactionErrorCode,
     message: string,
-    public readonly originalError?: unknown,
+    public readonly originalError?: unknown
   ) {
     super(message);
     this.name = 'TransactionError';

@@ -26,36 +26,25 @@ export function EmptyState({
   iconBackgroundColor = colors.brandBlueDim,
 }: EmptyStateProps) {
   return (
-    <View className="flex-1 items-center justify-center px-8 gap-4">
+    <View className="flex-1 items-center justify-center gap-4 px-8">
       <View
-        className="h-16 w-16 rounded-2xl items-center justify-center"
-        style={{ backgroundColor: iconBackgroundColor }}
-      >
+        className="h-16 w-16 items-center justify-center rounded-2xl"
+        style={{ backgroundColor: iconBackgroundColor }}>
         <Icon size={28} color={iconColor} />
       </View>
-      <Text
-        className="text-lg font-semibold text-center"
-        style={{ color: colors.textPrimary }}
-      >
+      <Text className="text-center text-lg font-semibold" style={{ color: colors.textPrimary }}>
         {title}
       </Text>
-      <Text
-        className="text-sm text-center"
-        style={{ color: colors.textMuted }}
-      >
+      <Text className="text-center text-sm" style={{ color: colors.textMuted }}>
         {message}
       </Text>
       {action ? (
         <TouchableOpacity
-          className="h-12 px-6 rounded-2xl items-center justify-center mt-2"
+          className="mt-2 h-12 items-center justify-center rounded-2xl px-6"
           style={{ backgroundColor: colors.cta }}
           activeOpacity={0.8}
-          onPress={action.onPress}
-        >
-          <Text
-            className="text-sm font-semibold"
-            style={{ color: colors.ctaText }}
-          >
+          onPress={action.onPress}>
+          <Text className="text-sm font-semibold" style={{ color: colors.ctaText }}>
             {action.label}
           </Text>
         </TouchableOpacity>

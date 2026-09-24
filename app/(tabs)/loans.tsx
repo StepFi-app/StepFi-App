@@ -18,7 +18,10 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { formatDate } from '../../src/locales/i18n';
 import type { Loan, LoanStatus } from '../../types/loan.types';
 
-function getStatusConfig(status: LoanStatus, t: (key: string, opts?: any) => string): {
+function getStatusConfig(
+  status: LoanStatus,
+  t: (key: string, opts?: any) => string
+): {
   label: string;
   color: string;
   bg: string;
@@ -26,15 +29,40 @@ function getStatusConfig(status: LoanStatus, t: (key: string, opts?: any) => str
 } {
   switch (status) {
     case 'active':
-      return { label: t('loans.statusActive'), color: colors.brandBlue, bg: colors.brandBlueDim, icon: Clock };
+      return {
+        label: t('loans.statusActive'),
+        color: colors.brandBlue,
+        bg: colors.brandBlueDim,
+        icon: Clock,
+      };
     case 'paid':
-      return { label: t('loans.statusPaid'), color: colors.success, bg: colors.successDim, icon: CheckCircle };
+      return {
+        label: t('loans.statusPaid'),
+        color: colors.success,
+        bg: colors.successDim,
+        icon: CheckCircle,
+      };
     case 'defaulted':
-      return { label: t('loans.statusDefaulted'), color: colors.error, bg: colors.errorDim, icon: XCircle };
+      return {
+        label: t('loans.statusDefaulted'),
+        color: colors.error,
+        bg: colors.errorDim,
+        icon: XCircle,
+      };
     case 'pending':
-      return { label: t('loans.statusPending'), color: colors.warning, bg: colors.warningDim, icon: Clock };
+      return {
+        label: t('loans.statusPending'),
+        color: colors.warning,
+        bg: colors.warningDim,
+        icon: Clock,
+      };
     case 'cancelled':
-      return { label: t('loans.statusCancelled'), color: colors.textMuted, bg: colors.subtle, icon: XCircle };
+      return {
+        label: t('loans.statusCancelled'),
+        color: colors.textMuted,
+        bg: colors.subtle,
+        icon: XCircle,
+      };
     default:
       return { label: status, color: colors.textMuted, bg: colors.subtle, icon: Clock };
   }
@@ -54,21 +82,17 @@ function LoanCard({ loan, t }: LoanCardProps) {
   const progress = totalCount > 0 ? paidCount / totalCount : 0;
 
   return (
-    <Card className="mb-3 p-4 gap-3">
+    <Card className="mb-3 gap-3 p-4">
       {/* Top row — vendor + status */}
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-3">
           <View
-            className="h-10 w-10 rounded-xl items-center justify-center"
-            style={{ backgroundColor: colors.brandBlueDim }}
-          >
+            className="h-10 w-10 items-center justify-center rounded-xl"
+            style={{ backgroundColor: colors.brandBlueDim }}>
             <CreditCard size={20} color={colors.brandBlue} />
           </View>
           <View>
-            <Text
-              className="text-sm font-semibold"
-              style={{ color: colors.textPrimary }}
-            >
+            <Text className="text-sm font-semibold" style={{ color: colors.textPrimary }}>
               {t('common.loanNumber', { id: loan.id.slice(0, 8) })}
             </Text>
             <Text className="text-xs" style={{ color: colors.textMuted }}>
@@ -80,13 +104,9 @@ function LoanCard({ loan, t }: LoanCardProps) {
         {/* Status badge */}
         <View
           className="flex-row items-center gap-1 rounded-xl px-3 py-1"
-          style={{ backgroundColor: statusConfig.bg }}
-        >
+          style={{ backgroundColor: statusConfig.bg }}>
           <StatusIcon size={12} color={statusConfig.color} />
-          <Text
-            className="text-xs font-semibold"
-            style={{ color: statusConfig.color }}
-          >
+          <Text className="text-xs font-semibold" style={{ color: statusConfig.color }}>
             {statusConfig.label}
           </Text>
         </View>
@@ -98,10 +118,7 @@ function LoanCard({ loan, t }: LoanCardProps) {
           <Text className="text-xs" style={{ color: colors.textMuted }}>
             {t('loans.totalAmount')}
           </Text>
-          <Text
-            className="text-lg font-bold"
-            style={{ color: colors.textPrimary }}
-          >
+          <Text className="text-lg font-bold" style={{ color: colors.textPrimary }}>
             ${loan.totalAmount.toLocaleString()}
           </Text>
         </View>
@@ -109,10 +126,7 @@ function LoanCard({ loan, t }: LoanCardProps) {
           <Text className="text-xs" style={{ color: colors.textMuted }}>
             {t('loans.remaining')}
           </Text>
-          <Text
-            className="text-lg font-bold"
-            style={{ color: colors.textSecondary }}
-          >
+          <Text className="text-lg font-bold" style={{ color: colors.textSecondary }}>
             ${loan.remainingBalance.toLocaleString()}
           </Text>
         </View>
@@ -128,10 +142,7 @@ function LoanCard({ loan, t }: LoanCardProps) {
             {t('loans.installmentsPaid', { paid: paidCount, total: totalCount })}
           </Text>
         </View>
-        <View
-          className="h-2 rounded-full w-full"
-          style={{ backgroundColor: colors.subtle }}
-        >
+        <View className="h-2 w-full rounded-full" style={{ backgroundColor: colors.subtle }}>
           <View
             className="h-2 rounded-full"
             style={{
@@ -185,7 +196,13 @@ export default function LoansScreen() {
           message={error ?? ''}
           iconColor={colors.error}
           iconBackgroundColor={colors.errorDim}
-          action={{ label: t('common.tryAgain'), onPress: () => { setIsLoading(true); void fetchLoans(); } }}
+          action={{
+            label: t('common.tryAgain'),
+            onPress: () => {
+              setIsLoading(true);
+              void fetchLoans();
+            },
+          }}
         />
       </SafeAreaView>
     );
@@ -216,21 +233,16 @@ export default function LoansScreen() {
             onRefresh={handleRefresh}
             tintColor={colors.brandGreen}
           />
-        }
-      >
-        <Text
-          className="text-2xl font-bold mt-2 mb-6"
-          style={{ color: colors.textPrimary }}
-        >
+        }>
+        <Text className="mb-6 mt-2 text-2xl font-bold" style={{ color: colors.textPrimary }}>
           {t('loans.myLoans')}
         </Text>
 
         {/* Summary */}
-        <View className="flex-row gap-3 mb-5">
+        <View className="mb-5 flex-row gap-3">
           <View
-            className="flex-1 rounded-xl p-3 items-center"
-            style={{ backgroundColor: colors.brandBlueDim }}
-          >
+            className="flex-1 items-center rounded-xl p-3"
+            style={{ backgroundColor: colors.brandBlueDim }}>
             <Text className="text-xs" style={{ color: colors.brandBlue }}>
               {t('loans.active')}
             </Text>
@@ -239,9 +251,8 @@ export default function LoansScreen() {
             </Text>
           </View>
           <View
-            className="flex-1 rounded-xl p-3 items-center"
-            style={{ backgroundColor: colors.successDim }}
-          >
+            className="flex-1 items-center rounded-xl p-3"
+            style={{ backgroundColor: colors.successDim }}>
             <Text className="text-xs" style={{ color: colors.success }}>
               {t('loans.paid')}
             </Text>
@@ -250,9 +261,8 @@ export default function LoansScreen() {
             </Text>
           </View>
           <View
-            className="flex-1 rounded-xl p-3 items-center"
-            style={{ backgroundColor: colors.warningDim }}
-          >
+            className="flex-1 items-center rounded-xl p-3"
+            style={{ backgroundColor: colors.warningDim }}>
             <Text className="text-xs" style={{ color: colors.warning }}>
               {t('loans.pending')}
             </Text>

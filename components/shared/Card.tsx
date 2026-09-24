@@ -19,8 +19,7 @@ export function Card({ children, className = '', style, ...rest }: CardProps) {
         },
         style,
       ]}
-      {...rest}
-    >
+      {...rest}>
       {children}
     </View>
   );

@@ -102,10 +102,15 @@ api.interceptors.response.use(
     // Capture non-401 production exceptions to Sentry
     if (status !== 401) {
       captureServiceError('api', 'response', error as AxiosError);
-      addBreadcrumb('http.error', `HTTP ${status ?? 'network'} error`, {
-        url: original?.url ?? 'unknown',
-        status: status ?? 0,
-      }, 'error');
+      addBreadcrumb(
+        'http.error',
+        `HTTP ${status ?? 'network'} error`,
+        {
+          url: original?.url ?? 'unknown',
+          status: status ?? 0,
+        },
+        'error'
+      );
     }
 
     // Handle Token Expiration Refresh Sequence
@@ -134,12 +139,18 @@ api.interceptors.response.use(
     if (original?.method?.toLowerCase() === 'get' && original?.url) {
       const cached = await getFromCache(`GET:${original.url}`);
       if (cached !== null) {
-        return { data: cached, status: 200, statusText: 'OK (cached)', headers: {}, config: original };
+        return {
+          data: cached,
+          status: 200,
+          statusText: 'OK (cached)',
+          headers: {},
+          config: original,
+        };
       }
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 function getActionType(url: string, method: string): QueueActionType {

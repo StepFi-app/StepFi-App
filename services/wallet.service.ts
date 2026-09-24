@@ -1,4 +1,4 @@
-import { isConnected, getPublicKey, signTransaction } from '@stellar/freighter-api';
+import { isConnected, requestAccess, signTransaction } from '@stellar/freighter-api';
 import SignClient from '@walletconnect/sign-client';
 import type { SessionTypes } from '@walletconnect/types';
 import { Platform } from 'react-native';
@@ -67,15 +67,21 @@ class WalletService {
 
   async connectFreighter(): Promise<{ address: string }> {
     try {
-      const connected = await isConnected();
-      if (!connected) {
+      const connection = await isConnected();
+      if (!connection.isConnected) {
         throw new Error(
           'Freighter is not connected. Please install the Freighter browser extension.'
         );
       }
 
-      const address = await getPublicKey();
-      return { address };
+      const access = await requestAccess();
+      if (access.error) {
+        throw new Error(access.error.message);
+      }
+      if (!access.address) {
+        throw new Error('Freighter did not return an address.');
+      }
+      return { address: access.address };
     } catch (error) {
       if (error instanceof Error) throw error;
       throw new Error('Failed to connect to Freighter');
@@ -87,7 +93,10 @@ class WalletService {
       const signed = await signTransaction(xdr, {
         networkPassphrase: 'Public Global Stellar Network ; September 2015',
       });
-      return signed;
+      if (signed.error) {
+        throw new Error(signed.error.message);
+      }
+      return signed.signedTxXdr;
     } catch (error) {
       if (error instanceof Error) throw error;
       throw new Error('User rejected the signing request');
@@ -121,13 +130,9 @@ class WalletService {
     return uri;
   }
 
-  async approveLobstrSession(
-    timeoutMs = 300_000
-  ): Promise<{ address: string; sessionId: string }> {
+  async approveLobstrSession(timeoutMs = 300_000): Promise<{ address: string; sessionId: string }> {
     if (!this.pendingApproval) {
-      throw new Error(
-        'No pending Lobstr session. Call getLobstrConnectionUri() first.'
-      );
+      throw new Error('No pending Lobstr session. Call getLobstrConnectionUri() first.');
     }
 
     const timeout = new Promise<never>((_, reject) => {
@@ -161,11 +166,7 @@ class WalletService {
     }
   }
 
-  async signWithLobstr(
-    xdr: string,
-    sessionId: string,
-    publicKey: string
-  ): Promise<string> {
+  async signWithLobstr(xdr: string, sessionId: string, publicKey: string): Promise<string> {
     if (!this.wcClient) {
       throw new Error('WalletConnect not initialized');
     }
@@ -233,9 +234,7 @@ class WalletService {
     }
   }
 
-  private async persistLobstrSession(
-    data: LobstrSessionData
-  ): Promise<void> {
+  private async persistLobstrSession(data: LobstrSessionData): Promise<void> {
     const raw = JSON.stringify(data);
     if (Platform.OS === 'web') {
       localStorage.setItem(SESSION_KEY, raw);

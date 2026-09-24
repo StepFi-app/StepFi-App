@@ -11,6 +11,7 @@ interface ButtonProps {
   iconPosition?: 'left' | 'right';
   isLoading?: boolean;
   disabled?: boolean;
+  className?: string;
 }
 
 export function Button({
@@ -21,6 +22,7 @@ export function Button({
   iconPosition = 'left',
   isLoading = false,
   disabled = false,
+  className,
 }: ButtonProps) {
   const isPrimary = variant === 'primary';
   const isDanger = variant === 'danger';
@@ -28,11 +30,7 @@ export function Button({
   const isGhost = variant === 'ghost';
   const isDisabled = disabled || isLoading;
 
-  const backgroundColor = isPrimary
-    ? colors.cta
-    : isDanger
-      ? colors.errorDim
-      : 'transparent';
+  const backgroundColor = isPrimary ? colors.cta : isDanger ? colors.errorDim : 'transparent';
 
   const textColor = isPrimary
     ? colors.ctaText
@@ -46,7 +44,7 @@ export function Button({
 
   return (
     <TouchableOpacity
-      className="h-14 w-full rounded-2xl flex-row items-center justify-center gap-2"
+      className={`h-14 w-full flex-row items-center justify-center gap-2 rounded-2xl${className ? ` ${className}` : ''}`}
       style={{
         backgroundColor,
         borderWidth: isSecondary ? 1 : 0,
@@ -55,21 +53,16 @@ export function Button({
       }}
       activeOpacity={0.8}
       onPress={onPress}
-      disabled={isDisabled}
-    >
+      disabled={isDisabled}>
       {isLoading ? (
         <ActivityIndicator size="small" color={textColor} />
       ) : (
         <>
-          {Icon && iconPosition === 'left' ? (
-            <Icon size={20} color={textColor} />
-          ) : null}
+          {Icon && iconPosition === 'left' ? <Icon size={20} color={textColor} /> : null}
           <Text className="text-base font-semibold" style={{ color: textColor }}>
             {label}
           </Text>
-          {Icon && iconPosition === 'right' ? (
-            <Icon size={20} color={textColor} />
-          ) : null}
+          {Icon && iconPosition === 'right' ? <Icon size={20} color={textColor} /> : null}
         </>
       )}
     </TouchableOpacity>

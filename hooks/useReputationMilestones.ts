@@ -21,12 +21,12 @@ export function useReputationMilestones() {
     if (!reputation || !prevRepRef.current) return;
 
     const prevRep = prevRepRef.current;
-    
+
     // Tier up detection
     if (reputation.tier.toLowerCase() !== prevRep.tier.toLowerCase()) {
       const prevIdx = TIER_ORDER.indexOf(prevRep.tier.toLowerCase());
       const newIdx = TIER_ORDER.indexOf(reputation.tier.toLowerCase());
-      
+
       // Only show if moving UP
       if (newIdx > prevIdx) {
         setNewTier(reputation.tier);
@@ -36,10 +36,10 @@ export function useReputationMilestones() {
 
     // Milestone detection (e.g., reaching 25, 50, 75, 100)
     const milestones = [25, 50, 75, 100];
-    const reachedMilestone = milestones.find(m => reputation.score >= m && prevRep.score < m);
+    const reachedMilestone = milestones.find((m) => reputation.score >= m && prevRep.score < m);
     if (reachedMilestone) {
-        setMilestoneType(`${reachedMilestone} Score Reached!`);
-        setShowMilestone(true);
+      setMilestoneType(`${reachedMilestone} Score Reached!`);
+      setShowMilestone(true);
     }
 
     prevRepRef.current = reputation;
