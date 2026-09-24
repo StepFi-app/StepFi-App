@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "**" ]
   pull_request:
+    branches: [ "**" ]
 
 # cancel superseded runs on the same ref to save minutes
 concurrency:
@@ -41,3 +41,35 @@ jobs:
           name: web-build
           path: dist/
           retention-days: 7
+
+  quality:
+    name: Lint / Typecheck / Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # NOTE: soft-launch. The app is mid-fix, so these steps are non-blocking
+    # (continue-on-error) and surface failures as annotations only. Flip to
+    # blocking once the outstanding type/lint issues are cleared (Phase 4).
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Typecheck
+        run: npm run typecheck
+        continue-on-error: true
+
+      - name: Test
+        run: npm test
+        continue-on-error: true
