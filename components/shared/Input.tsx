@@ -28,7 +28,7 @@ export function Input({ label, error, ...rest }: InputProps) {
         {...rest}
       />
       {error ? (
-        <Text className="text-xs mt-1" style={{ color: colors.error }}>
+        <Text className="mt-1 text-xs" style={{ color: colors.error }}>
           {error}
         </Text>
       ) : null}

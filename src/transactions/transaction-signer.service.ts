@@ -1,9 +1,6 @@
 import { useWalletStore } from '../../stores/wallet.store';
 import { transactionsService } from '../../services/transactions.service';
-import {
-  TransactionError,
-  TransactionErrorCode,
-} from '../../types/transaction.types';
+import { TransactionError, TransactionErrorCode } from '../../types/transaction.types';
 import type { TransactionResult } from '../../types/transaction.types';
 
 function mapWalletError(error: unknown): TransactionError {
@@ -16,29 +13,23 @@ function mapWalletError(error: unknown): TransactionError {
     return new TransactionError(
       TransactionErrorCode.USER_REJECTED,
       'Transaction was rejected by the user.',
-      error,
+      error
     );
   }
 
-  if (
-    message.toLowerCase().includes('timeout') ||
-    message.toLowerCase().includes('timed out')
-  ) {
+  if (message.toLowerCase().includes('timeout') || message.toLowerCase().includes('timed out')) {
     return new TransactionError(
       TransactionErrorCode.NETWORK_TIMEOUT,
       'Signing request timed out. Please try again.',
-      error,
+      error
     );
   }
 
-  if (
-    message.toLowerCase().includes('insufficient') ||
-    message.toLowerCase().includes('balance')
-  ) {
+  if (message.toLowerCase().includes('insufficient') || message.toLowerCase().includes('balance')) {
     return new TransactionError(
       TransactionErrorCode.INSUFFICIENT_FUNDS,
       'Insufficient funds to complete this transaction.',
-      error,
+      error
     );
   }
 
@@ -46,15 +37,11 @@ function mapWalletError(error: unknown): TransactionError {
     return new TransactionError(
       TransactionErrorCode.SIMULATION_FAILED,
       'Transaction simulation failed. Please try again.',
-      error,
+      error
     );
   }
 
-  return new TransactionError(
-    TransactionErrorCode.UNKNOWN,
-    message,
-    error,
-  );
+  return new TransactionError(TransactionErrorCode.UNKNOWN, message, error);
 }
 
 function mapSubmissionError(error: unknown): TransactionError {
@@ -63,32 +50,26 @@ function mapSubmissionError(error: unknown): TransactionError {
   const message =
     error instanceof Error ? error.message : 'An unknown error occurred during submission';
 
-  if (
-    message.toLowerCase().includes('timeout') ||
-    message.toLowerCase().includes('timed out')
-  ) {
+  if (message.toLowerCase().includes('timeout') || message.toLowerCase().includes('timed out')) {
     return new TransactionError(
       TransactionErrorCode.NETWORK_TIMEOUT,
       'Submission timed out. Please check your connection and try again.',
-      error,
+      error
     );
   }
 
-  if (
-    message.toLowerCase().includes('insufficient') ||
-    message.toLowerCase().includes('balance')
-  ) {
+  if (message.toLowerCase().includes('insufficient') || message.toLowerCase().includes('balance')) {
     return new TransactionError(
       TransactionErrorCode.INSUFFICIENT_FUNDS,
       'Insufficient funds to complete this transaction.',
-      error,
+      error
     );
   }
 
   return new TransactionError(
     TransactionErrorCode.SUBMISSION_FAILED,
     `Transaction submission failed: ${message}`,
-    error,
+    error
   );
 }
 
@@ -107,24 +88,20 @@ class TransactionSignerService {
   async signAndBroadcast(unsignedXdr: string): Promise<TransactionResult> {
     const walletState = useWalletStore.getState();
 
-    if (!walletState.isConnected || !walletState.publicKey) {
+    if (!walletState.isConnected || !walletState.address) {
       throw new TransactionError(
         TransactionErrorCode.WALLET_NOT_CONNECTED,
-        'Wallet is not connected. Please connect your wallet first.',
+        'Wallet is not connected. Please connect your wallet first.'
       );
     }
 
-    walletState.setSigning(true);
-
+    // signXdr manages the isSigning flag internally (true on entry, false on exit).
     let signedXdr: string;
     try {
       signedXdr = await walletState.signXdr(unsignedXdr);
     } catch (error) {
-      walletState.setSigning(false);
       throw mapWalletError(error);
     }
-
-    walletState.setSigning(false);
 
     try {
       return await transactionsService.submitSignedXdr(signedXdr);

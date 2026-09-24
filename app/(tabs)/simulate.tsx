@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, LayoutChangeEvent, PanResponder } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  LayoutChangeEvent,
+  PanResponder,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  Calculator, 
-  Check, 
-  AlertTriangle,
-  Info,
-  Save
-} from 'lucide-react-native';
+import { Calculator, Check, AlertTriangle, Info, Save } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { Card } from '../../components/shared/Card';
 import { Button } from '../../components/shared/Button';
@@ -47,7 +48,7 @@ function CustomSlider({ min, max, step = 1, value, onValueChange }: SliderProps)
           const locationX = evt.nativeEvent.locationX;
           const percentage = Math.max(0, Math.min(1, locationX / width));
           const targetVal = min + percentage * (max - min);
-          
+
           setLocalValue(targetVal);
 
           const steppedVal = Math.round(targetVal / step) * step;
@@ -62,7 +63,7 @@ function CustomSlider({ min, max, step = 1, value, onValueChange }: SliderProps)
         if (width === 0) return;
         const deltaVal = (gestureState.dx / width) * (max - min);
         const targetVal = Math.max(min, Math.min(max, startValueRef.current + deltaVal));
-        
+
         setLocalValue(targetVal);
 
         const steppedVal = Math.round(targetVal / step) * step;
@@ -80,15 +81,18 @@ function CustomSlider({ min, max, step = 1, value, onValueChange }: SliderProps)
     <View
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
       {...panResponder.panHandlers}
-      style={{ height: 44, justifyContent: 'center', width: '100%', cursor: 'pointer' } as any}
-    >
+      style={{ height: 44, justifyContent: 'center', width: '100%', cursor: 'pointer' } as any}>
       {/* Background Track */}
-      <View 
+      <View
         style={{ height: 6, backgroundColor: colors.subtle, borderRadius: 3, width: '100%' }}
-        pointerEvents="none"
-      >
-        <View 
-          style={{ height: '100%', backgroundColor: colors.brandGreen, borderRadius: 3, width: `${percentage * 100}%` }} 
+        pointerEvents="none">
+        <View
+          style={{
+            height: '100%',
+            backgroundColor: colors.brandGreen,
+            borderRadius: 3,
+            width: `${percentage * 100}%`,
+          }}
           pointerEvents="none"
         />
       </View>
@@ -176,13 +180,10 @@ export default function SimulateScreen() {
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-      >
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         {/* Header */}
-        <View className="flex-row items-center gap-3 mt-2 mb-6">
-          <View className="p-3 rounded-xl" style={{ backgroundColor: colors.brandGreenDim }}>
+        <View className="mb-6 mt-2 flex-row items-center gap-3">
+          <View className="rounded-xl p-3" style={{ backgroundColor: colors.brandGreenDim }}>
             <Calculator size={24} color={colors.brandGreen} />
           </View>
           <View className="flex-1">
@@ -196,10 +197,10 @@ export default function SimulateScreen() {
         </View>
 
         {/* Inputs */}
-        <View className="gap-4 mb-6">
+        <View className="mb-6 gap-4">
           {/* Income Slider */}
-          <Card className="p-5 gap-3">
-            <View className="flex-row justify-between items-center">
+          <Card className="gap-3 p-5">
+            <View className="flex-row items-center justify-between">
               <Text className="text-sm font-semibold" style={{ color: colors.textSecondary }}>
                 Monthly Income
               </Text>
@@ -215,20 +216,24 @@ export default function SimulateScreen() {
               onValueChange={setIncome}
             />
             <View className="flex-row justify-between">
-              <Text className="text-[10px]" style={{ color: colors.textMuted }}>$1,000</Text>
-              <Text className="text-[10px]" style={{ color: colors.textMuted }}>$25,000</Text>
+              <Text className="text-[10px]" style={{ color: colors.textMuted }}>
+                $1,000
+              </Text>
+              <Text className="text-[10px]" style={{ color: colors.textMuted }}>
+                $25,000
+              </Text>
             </View>
           </Card>
 
           {/* Loan Amount Slider */}
-          <Card className="p-5 gap-3">
-            <View className="flex-row justify-between items-center">
+          <Card className="gap-3 p-5">
+            <View className="flex-row items-center justify-between">
               <View>
                 <Text className="text-sm font-semibold" style={{ color: colors.textSecondary }}>
                   Desired Loan Amount
                 </Text>
                 {maxCredit > 0 ? (
-                  <Text className="text-[10px] mt-0.5" style={{ color: colors.textMuted }}>
+                  <Text className="mt-0.5 text-[10px]" style={{ color: colors.textMuted }}>
                     Max credit limit: ${maxCredit.toLocaleString()}
                   </Text>
                 ) : null}
@@ -245,12 +250,18 @@ export default function SimulateScreen() {
               onValueChange={setDesiredLoanAmount}
             />
             <View className="flex-row justify-between">
-              <Text className="text-[10px]" style={{ color: colors.textMuted }}>$100</Text>
-              <Text className="text-[10px]" style={{ color: colors.textMuted }}>$10,000</Text>
+              <Text className="text-[10px]" style={{ color: colors.textMuted }}>
+                $100
+              </Text>
+              <Text className="text-[10px]" style={{ color: colors.textMuted }}>
+                $10,000
+              </Text>
             </View>
 
             {isOverLimit ? (
-              <View className="flex-row items-center gap-1.5 mt-1 rounded-lg p-2" style={{ backgroundColor: colors.warningDim }}>
+              <View
+                className="mt-1 flex-row items-center gap-1.5 rounded-lg p-2"
+                style={{ backgroundColor: colors.warningDim }}>
                 <AlertTriangle size={12} color={colors.warning} />
                 <Text className="text-[10px] font-medium" style={{ color: colors.warning }}>
                   Simulated amount exceeds your credit limit of ${maxCredit.toLocaleString()}
@@ -261,56 +272,57 @@ export default function SimulateScreen() {
         </View>
 
         {/* Affordability Status Badge */}
-        <View 
-          className="rounded-2xl p-4 flex-row items-start gap-3 mb-6 border"
-          style={{ 
-            backgroundColor: activeHealth.bg, 
-            borderColor: activeHealth.color + '40'
-          }}
-        >
-          <View className="p-2 rounded-full mt-0.5" style={{ backgroundColor: colors.background + '40' }}>
+        <View
+          className="mb-6 flex-row items-start gap-3 rounded-2xl border p-4"
+          style={{
+            backgroundColor: activeHealth.bg,
+            borderColor: activeHealth.color + '40',
+          }}>
+          <View
+            className="mt-0.5 rounded-full p-2"
+            style={{ backgroundColor: colors.background + '40' }}>
             <ActiveIcon size={16} color={activeHealth.color} />
           </View>
           <View className="flex-1">
             <Text className="text-sm font-bold" style={{ color: activeHealth.color }}>
-              {activeHealth.label} ({Math.round(repayments[selectedTerm as 3 | 6 | 12].debtToIncomeRatio * 100)}% DTI)
+              {activeHealth.label} (
+              {Math.round(repayments[selectedTerm as 3 | 6 | 12].debtToIncomeRatio * 100)}% DTI)
             </Text>
-            <Text className="text-xs mt-1 leading-4" style={{ color: colors.textPrimary }}>
+            <Text className="mt-1 text-xs leading-4" style={{ color: colors.textPrimary }}>
               {activeHealth.advice}
             </Text>
           </View>
         </View>
 
         {/* Comparison Cards Section */}
-        <Text className="text-lg font-bold mb-3" style={{ color: colors.textPrimary }}>
+        <Text className="mb-3 text-lg font-bold" style={{ color: colors.textPrimary }}>
           Compare Terms
         </Text>
-        <View className="flex-row flex-wrap gap-3 mb-6">
+        <View className="mb-6 flex-row flex-wrap gap-3">
           {(Object.keys(repayments) as unknown as ('3' | '6' | '12')[]).map((termStr) => {
             const term = parseInt(termStr, 10);
             const data = repayments[term as 3 | 6 | 12];
             const isSelected = selectedTerm === term;
             const termHealth = getHealthConfig(data.status);
-            
+
             return (
               <TouchableOpacity
                 key={term}
                 onPress={() => setSelectedTerm(term)}
                 activeOpacity={0.8}
-                className="flex-1 min-w-[200px] p-4 rounded-2xl border gap-3"
+                className="min-w-[200px] flex-1 gap-3 rounded-2xl border p-4"
                 style={{
                   backgroundColor: colors.surface,
                   borderColor: isSelected ? colors.brandGreen : colors.borderSubtle,
                   borderWidth: isSelected ? 2 : 1,
-                }}
-              >
+                }}>
                 {/* Header card info */}
-                <View className="flex-row justify-between items-center">
+                <View className="flex-row items-center justify-between">
                   <Text className="text-sm font-bold" style={{ color: colors.textPrimary }}>
                     {term} Months
                   </Text>
-                  <View 
-                    className="w-2.5 h-2.5 rounded-full" 
+                  <View
+                    className="h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: termHealth.color }}
                   />
                 </View>
@@ -320,7 +332,7 @@ export default function SimulateScreen() {
                   <Text className="text-xs" style={{ color: colors.textMuted }}>
                     Monthly Payment
                   </Text>
-                  <Text className="text-lg font-bold mt-0.5" style={{ color: colors.textPrimary }}>
+                  <Text className="mt-0.5 text-lg font-bold" style={{ color: colors.textPrimary }}>
                     ${Math.round(data.monthlyRepayment).toLocaleString()}/mo
                   </Text>
                 </View>
@@ -352,7 +364,7 @@ export default function SimulateScreen() {
 
         {/* Save Simulation Action */}
         <Button
-          label={isSaved ? "Simulation Saved" : "Save Simulation"}
+          label={isSaved ? 'Simulation Saved' : 'Save Simulation'}
           icon={isSaved ? Check : Save}
           onPress={handleSave}
           disabled={isSaved}

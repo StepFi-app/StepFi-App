@@ -21,8 +21,7 @@ export const useSecurityStore = create<SecurityState>((set) => ({
 
   unlock: () => set({ isLocked: false, failedAttempts: 0 }),
 
-  incrementFailedAttempts: () =>
-    set((state) => ({ failedAttempts: state.failedAttempts + 1 })),
+  incrementFailedAttempts: () => set((state) => ({ failedAttempts: state.failedAttempts + 1 })),
 
   resetFailedAttempts: () => set({ failedAttempts: 0 }),
 

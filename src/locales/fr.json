@@ -166,11 +166,11 @@
       "connecting": "Connexion...",
       "connectStellarWallet": "Connecter un portefeuille Stellar",
       "dontHaveWallet": "Vous n'avez pas de portefeuille ?",
-    "walletLobstr": "Lobstr",
-    "walletXbull": "xBull",
-    "score": "Score",
-    "rate": "Taux",
-    "max": "Max"
+      "walletLobstr": "Lobstr",
+      "walletXbull": "xBull",
+      "score": "Score",
+      "rate": "Taux",
+      "max": "Max"
     },
     "roleSelect": {
       "title": "Comment allez-vous utiliser StepFi ?",
@@ -221,6 +221,19 @@
     }
   },
   "weekdayHeaders": ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
-  "monthNames": ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+  "monthNames": [
+    "Janvier",
+    "Février",
+    "Mars",
+    "Avril",
+    "Mai",
+    "Juin",
+    "Juillet",
+    "Août",
+    "Septembre",
+    "Octobre",
+    "Novembre",
+    "Décembre"
+  ],
   "tierNames": ["Débutant", "Bronze", "Argent", "Or"]
 }

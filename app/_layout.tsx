@@ -44,7 +44,10 @@ function useAuthGuard() {
     } else if (isAuthenticated) {
       if (role === 'learner' && !onboardingComplete && !isOnboarding) {
         router.replace('/(auth)/onboarding');
-      } else if ((onboardingComplete || role === 'sponsor' || role === null) && (inAuthGroup || isOnboarding)) {
+      } else if (
+        (onboardingComplete || role === 'sponsor' || role === null) &&
+        (inAuthGroup || isOnboarding)
+      ) {
         router.replace('/(tabs)');
       }
     }
@@ -123,10 +126,7 @@ function RootLayout() {
 
       if (state === 'active') {
         const elapsed = Date.now() - lastActiveRef.current;
-        if (
-          elapsed >= IDLE_TIMEOUT_MS &&
-          useAuthStore.getState().isAuthenticated
-        ) {
+        if (elapsed >= IDLE_TIMEOUT_MS && useAuthStore.getState().isAuthenticated) {
           useSecurityStore.getState().lock();
         }
         if (!useSecurityStore.getState().isLocked) {
@@ -188,8 +188,7 @@ function RootLayout() {
               if (!useSecurityStore.getState().isLocked) {
                 startIdleTimer();
               }
-            }}
-          >
+            }}>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="(tabs)" />

@@ -39,8 +39,18 @@ export interface UseInstallmentCalendarReturn {
 
 const WEEKDAY_HEADERS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 function normalizeDate(dateStr: string): string {
@@ -135,9 +145,7 @@ export function useInstallmentCalendar(): UseInstallmentCalendarReturn {
   }, [fetchLoans]);
 
   const allEvents: CalendarEventData[] = useMemo(() => {
-    const activeLoans = loans.filter(
-      (l) => l.status === 'active' || l.status === 'pending',
-    );
+    const activeLoans = loans.filter((l) => l.status === 'active' || l.status === 'pending');
 
     return activeLoans.flatMap((loan) =>
       loan.installments.map((inst) => ({
@@ -146,13 +154,13 @@ export function useInstallmentCalendar(): UseInstallmentCalendarReturn {
         amount: inst.amount,
         dueDate: normalizeDate(inst.dueDate),
         isPaid: inst.paid,
-      })),
+      }))
     );
   }, [loans]);
 
   const weeks = useMemo(
     () => buildWeeks(currentMonth.getFullYear(), currentMonth.getMonth(), allEvents),
-    [currentMonth, allEvents],
+    [currentMonth, allEvents]
   );
 
   const paymentStreak = useMemo(() => {
@@ -176,12 +184,9 @@ export function useInstallmentCalendar(): UseInstallmentCalendarReturn {
     setSelectedDay(null);
   }, []);
 
-  const selectDay = useCallback(
-    (day: CalendarDayData | null) => {
-      setSelectedDay(day);
-    },
-    [],
-  );
+  const selectDay = useCallback((day: CalendarDayData | null) => {
+    setSelectedDay(day);
+  }, []);
 
   const exportToCalendar = useCallback(async () => {
     return notificationsService.exportToCalendar(
@@ -190,7 +195,7 @@ export function useInstallmentCalendar(): UseInstallmentCalendarReturn {
         notes: `Payment of $${e.amount.toLocaleString()} for ${e.loanName}`,
         startDate: e.dueDate,
         endDate: e.dueDate,
-      })),
+      }))
     );
   }, [allEvents]);
 

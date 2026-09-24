@@ -1,10 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../constants/colors';
 import { biometricService } from '../security/biometric.service';
@@ -26,13 +21,13 @@ export function BiometricGate() {
 
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const clearUser = useUserStore((s) => s.clearUser);
-  const setDisconnected = useWalletStore((s) => s.setDisconnected);
+  const disconnect = useWalletStore((s) => s.disconnect);
 
   const handleLogout = useCallback(async () => {
-    setDisconnected();
+    await disconnect();
     clearUser();
     await clearAuth();
-  }, [clearAuth, clearUser, setDisconnected]);
+  }, [clearAuth, clearUser, disconnect]);
 
   const handleFailure = useCallback(async () => {
     const store = useSecurityStore.getState();
@@ -43,7 +38,7 @@ export function BiometricGate() {
     } else {
       const remaining = MAX_FAILED_ATTEMPTS - newCount;
       setErrorMessage(
-        `Verification failed. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`,
+        `Verification failed. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`
       );
     }
   }, [handleLogout]);
@@ -62,10 +57,7 @@ export function BiometricGate() {
       const hasPinSet = await biometricService.hasPin();
       if (hasPinSet) {
         setMode('pin');
-        if (
-          result.error !== 'user_cancel' &&
-          result.error !== 'USER_CANCELED'
-        ) {
+        if (result.error !== 'user_cancel' && result.error !== 'USER_CANCELED') {
           await handleFailure();
         }
       } else {
@@ -79,8 +71,7 @@ export function BiometricGate() {
     let cancelled = false;
 
     async function init() {
-      const { isAvailable, isEnrolled } =
-        await biometricService.checkBiometricAvailability();
+      const { isAvailable, isEnrolled } = await biometricService.checkBiometricAvailability();
 
       if (cancelled) return;
 
@@ -95,7 +86,7 @@ export function BiometricGate() {
         } else {
           setMode('error');
           setErrorMessage(
-            'No biometric or PIN configured. Sign out and set up security in Settings.',
+            'No biometric or PIN configured. Sign out and set up security in Settings.'
           );
         }
       }
@@ -125,8 +116,7 @@ export function BiometricGate() {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center"
-        style={{ backgroundColor: colors.background }}
-      >
+        style={{ backgroundColor: colors.background }}>
         <Text style={{ color: colors.textSecondary }}>Preparing...</Text>
       </SafeAreaView>
     );
@@ -136,33 +126,21 @@ export function BiometricGate() {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center"
-        style={{ backgroundColor: colors.background }}
-      >
-        <Text style={{ color: colors.textSecondary }}>
-          Authenticating...
-        </Text>
+        style={{ backgroundColor: colors.background }}>
+        <Text style={{ color: colors.textSecondary }}>Authenticating...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView
-      className="flex-1"
-      style={{ backgroundColor: colors.background }}
-    >
-      <View className="flex-1 items-center justify-center px-8 gap-5">
-        <Text
-          className="text-2xl font-bold"
-          style={{ color: colors.textPrimary }}
-        >
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
+      <View className="flex-1 items-center justify-center gap-5 px-8">
+        <Text className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
           {mode === 'error' ? 'Cannot Unlock' : 'Enter PIN'}
         </Text>
 
         {errorMessage ? (
-          <Text
-            className="text-sm text-center"
-            style={{ color: colors.error }}
-          >
+          <Text className="text-center text-sm" style={{ color: colors.error }}>
             {errorMessage}
           </Text>
         ) : null}
@@ -170,7 +148,7 @@ export function BiometricGate() {
         {mode === 'pin' ? (
           <>
             <TextInput
-              className="w-full text-center text-2xl tracking-widest rounded-xl px-4 py-3"
+              className="w-full rounded-xl px-4 py-3 text-center text-2xl tracking-widest"
               style={{
                 color: colors.textPrimary,
                 backgroundColor: colors.surface,
@@ -189,33 +167,23 @@ export function BiometricGate() {
             />
 
             <TouchableOpacity
-              className="w-full py-4 rounded-xl items-center justify-center"
+              className="w-full items-center justify-center rounded-xl py-4"
               style={{
                 backgroundColor: colors.primaryContainer,
                 opacity: pin.length >= 4 ? 1 : 0.5,
               }}
               activeOpacity={0.8}
               onPress={handlePinSubmit}
-              disabled={pin.length < 4}
-            >
-              <Text
-                className="text-base font-bold"
-                style={{ color: colors.background }}
-              >
+              disabled={pin.length < 4}>
+              <Text className="text-base font-bold" style={{ color: colors.background }}>
                 Unlock
               </Text>
             </TouchableOpacity>
           </>
         ) : null}
 
-        <TouchableOpacity
-          className="py-3 mt-4"
-          onPress={handleLogout}
-        >
-          <Text
-            className="text-sm"
-            style={{ color: colors.textMuted }}
-          >
+        <TouchableOpacity className="mt-4 py-3" onPress={handleLogout}>
+          <Text className="text-sm" style={{ color: colors.textMuted }}>
             Sign out
           </Text>
         </TouchableOpacity>

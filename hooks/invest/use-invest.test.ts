@@ -1,8 +1,8 @@
-import { formatCurrency, validateDepositAmount } from './use-invest';
+import { formatCurrency, validateDepositAmount } from './invest-utils';
 
-declare var describe: any;
-declare var it: any;
-declare var expect: any;
+declare const describe: any;
+declare const it: any;
+declare const expect: any;
 
 describe('useInvest utility functions', () => {
   describe('formatCurrency', () => {

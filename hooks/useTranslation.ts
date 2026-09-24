@@ -9,7 +9,7 @@ export function useTranslation() {
     async (lang: string) => {
       await i18nInstance.changeLanguage(lang);
     },
-    [i18nInstance],
+    [i18nInstance]
   );
 
   const currentLanguage = i18nInstance.language?.split('-')[0] ?? 'en';

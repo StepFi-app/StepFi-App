@@ -19,7 +19,7 @@ export function useVouch(): UseVouchReturn {
 
       await execute(unsignedXdr);
     },
-    [status, execute],
+    [status, execute]
   );
 
   return { status, txHash, error, execute, submitVouch, reset };

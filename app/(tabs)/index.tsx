@@ -10,7 +10,7 @@ import {
   GraduationCap,
   Laptop,
   Calendar,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { EmptyState } from '../../components/shared/EmptyState';
@@ -76,7 +76,11 @@ export default function HomeScreen() {
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0];
 
   const upcomingPayments = activeLoans
-    .flatMap((l) => l.installments.filter((i) => !i.paid).map((i) => ({ ...i, loanTitle: l.totalAmount.toString(), loanId: l.id })))
+    .flatMap((l) =>
+      l.installments
+        .filter((i) => !i.paid)
+        .map((i) => ({ ...i, loanTitle: l.totalAmount.toString(), loanId: l.id }))
+    )
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 3); // Get next 3
 
@@ -89,7 +93,13 @@ export default function HomeScreen() {
           message={error ?? ''}
           iconColor={colors.error}
           iconBackgroundColor={colors.errorDim}
-          action={{ label: t('common.tryAgain'), onPress: () => { setIsLoading(true); void fetchDashboard(); } }}
+          action={{
+            label: t('common.tryAgain'),
+            onPress: () => {
+              setIsLoading(true);
+              void fetchDashboard();
+            },
+          }}
         />
       </SafeAreaView>
     );
@@ -101,52 +111,62 @@ export default function HomeScreen() {
     return { whole, decimal };
   };
 
-  const creditFormatted = credit ? formatCurrency(credit.available) : { whole: '0', decimal: '.00' };
+  const creditFormatted = credit
+    ? formatCurrency(credit.available)
+    : { whole: '0', decimal: '.00' };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
+      edges={['top', 'left', 'right']}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 }}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.brandGreen} />}
-      >
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.brandGreen}
+          />
+        }>
         {/* Hero Card */}
         <View
-          className="rounded-xl p-5 mb-6 shadow-sm overflow-hidden"
+          className="mb-6 overflow-hidden rounded-xl p-5 shadow-sm"
           style={{
             backgroundColor: colors.surface,
             borderWidth: 1,
             borderColor: colors.borderSubtle,
             borderTopWidth: 2,
             borderTopColor: colors.brandGreen,
-          }}
-        >
-          <View className="flex-row justify-between items-end">
+          }}>
+          <View className="flex-row items-end justify-between">
             <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.textSecondary }}>
+              <Text className="mb-1 text-sm font-medium" style={{ color: colors.textSecondary }}>
                 {t('home.availableCredit')}
               </Text>
               <View className="flex-row items-end">
                 <Text className="text-4xl font-bold" style={{ color: colors.brandGreen }}>
                   ${creditFormatted.whole}
                 </Text>
-                <Text className="text-lg font-bold pb-1" style={{ color: colors.textSecondary }}>
+                <Text className="pb-1 text-lg font-bold" style={{ color: colors.textSecondary }}>
                   {creditFormatted.decimal}
                 </Text>
               </View>
             </View>
             <View
-              className="px-2 py-0.5 rounded-md"
-              style={{ backgroundColor: colors.brandGreen + '15' }}
-            >
-              <Text className="text-[10px] font-bold uppercase tracking-widest" style={{ color: colors.brandGreen }}>
+              className="rounded-md px-2 py-0.5"
+              style={{ backgroundColor: colors.brandGreen + '15' }}>
+              <Text
+                className="text-[10px] font-bold uppercase tracking-widest"
+                style={{ color: colors.brandGreen }}>
                 {t('home.activeLimit')}
               </Text>
             </View>
           </View>
 
           {/* Progress Bar */}
-          <View className="flex-col gap-1 mt-4">
+          <View className="mt-4 flex-col gap-1">
             <View className="flex-row justify-between">
               <Text className="text-xs font-semibold" style={{ color: colors.textSecondary }}>
                 {t('home.used')}: ${credit?.used?.toLocaleString() ?? '0'}
@@ -155,11 +175,16 @@ export default function HomeScreen() {
                 {t('home.limit')}: ${credit?.limit?.toLocaleString() ?? '0'}
               </Text>
             </View>
-            <View className="h-2 w-full rounded-full flex-row overflow-hidden" style={{ backgroundColor: colors.subtle }}>
+            <View
+              className="h-2 w-full flex-row overflow-hidden rounded-full"
+              style={{ backgroundColor: colors.subtle }}>
               {credit && credit.limit > 0 ? (
                 <View
                   className="h-full rounded-full"
-                  style={{ backgroundColor: colors.brandGreen, width: `${(credit.used / credit.limit) * 100}%` }}
+                  style={{
+                    backgroundColor: colors.brandGreen,
+                    width: `${(credit.used / credit.limit) * 100}%`,
+                  }}
                 />
               ) : null}
             </View>
@@ -167,23 +192,36 @@ export default function HomeScreen() {
         </View>
 
         {/* Quick Actions Grid */}
-        <View className="flex-row justify-between mb-8">
+        <View className="mb-8 flex-row justify-between">
           {[
             { icon: Plus, label: t('home.apply'), color: colors.brandGreen, route: '/(tabs)/pay' },
-            { icon: ArrowUpRight, label: t('home.pay'), color: colors.textPrimary, route: '/(tabs)/pay' },
-            { icon: History, label: t('home.history'), color: colors.textPrimary, route: '/(tabs)/pay' },
-            { icon: BadgeCheck, label: t('home.vouches'), color: colors.textPrimary, route: '/(tabs)/reputation' },
+            {
+              icon: ArrowUpRight,
+              label: t('home.pay'),
+              color: colors.textPrimary,
+              route: '/(tabs)/pay',
+            },
+            {
+              icon: History,
+              label: t('home.history'),
+              color: colors.textPrimary,
+              route: '/(tabs)/pay',
+            },
+            {
+              icon: BadgeCheck,
+              label: t('home.vouches'),
+              color: colors.textPrimary,
+              route: '/(tabs)/reputation',
+            },
           ].map((action, idx) => (
-            <TouchableOpacity 
-              key={idx} 
-              className="flex-col items-center gap-2" 
+            <TouchableOpacity
+              key={idx}
+              className="flex-col items-center gap-2"
               activeOpacity={0.7}
-              onPress={() => action.route && router.push(action.route as any)}
-            >
+              onPress={() => action.route && router.push(action.route as any)}>
               <View
-                className="w-14 h-14 rounded-full flex items-center justify-center border"
-                style={{ backgroundColor: colors.surface, borderColor: colors.borderSubtle }}
-              >
+                className="flex h-14 w-14 items-center justify-center rounded-full border"
+                style={{ backgroundColor: colors.surface, borderColor: colors.borderSubtle }}>
                 <action.icon size={24} color={action.color} />
               </View>
               <Text className="text-xs font-semibold" style={{ color: colors.textPrimary }}>
@@ -197,7 +235,7 @@ export default function HomeScreen() {
         <ReputationProgressWidget />
 
         {/* Active Loans Horizontal Scroll */}
-        <View className="flex-col gap-3 mb-8">
+        <View className="mb-8 flex-col gap-3">
           <Text className="text-xl font-bold" style={{ color: colors.textPrimary }}>
             {t('home.activeLoans')}
           </Text>
@@ -205,20 +243,17 @@ export default function HomeScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 16 }}
-            className="overflow-visible"
-          >
+            className="overflow-visible">
             {activeLoans.map((loan, idx) => (
               <View
                 key={loan.id}
-                className="w-[280px] rounded-xl border p-4 flex-col gap-4"
-                style={{ backgroundColor: colors.surface, borderColor: colors.borderSubtle }}
-              >
-                <View className="flex-row justify-between items-start">
+                className="w-[280px] flex-col gap-4 rounded-xl border p-4"
+                style={{ backgroundColor: colors.surface, borderColor: colors.borderSubtle }}>
+                <View className="flex-row items-start justify-between">
                   <View className="flex-row items-center gap-2">
                     <View
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: colors.subtle }}
-                    >
+                      className="flex h-8 w-8 items-center justify-center rounded-full"
+                      style={{ backgroundColor: colors.subtle }}>
                       {idx % 2 === 0 ? (
                         <GraduationCap size={16} color={colors.textSecondary} />
                       ) : (
@@ -230,9 +265,8 @@ export default function HomeScreen() {
                     </Text>
                   </View>
                   <View
-                    className="px-2 py-1 rounded-md border"
-                    style={{ backgroundColor: colors.subtle, borderColor: colors.borderSubtle }}
-                  >
+                    className="rounded-md border px-2 py-1"
+                    style={{ backgroundColor: colors.subtle, borderColor: colors.borderSubtle }}>
                     <Text className="text-xs font-semibold" style={{ color: colors.brandGreen }}>
                       {t('home.active')}
                     </Text>
@@ -249,19 +283,30 @@ export default function HomeScreen() {
                   </View>
                 </View>
                 {/* Visual Segments */}
-                <View className="flex-row items-center gap-1 mt-2">
-                  <View className="h-1.5 flex-1 rounded-full" style={{ backgroundColor: colors.brandGreen }} />
-                  <View className="h-1.5 flex-1 rounded-full" style={{ backgroundColor: colors.subtle }} />
-                  <View className="h-1.5 flex-1 rounded-full" style={{ backgroundColor: colors.subtle }} />
-                  <View className="h-1.5 flex-1 rounded-full" style={{ backgroundColor: colors.subtle }} />
+                <View className="mt-2 flex-row items-center gap-1">
+                  <View
+                    className="h-1.5 flex-1 rounded-full"
+                    style={{ backgroundColor: colors.brandGreen }}
+                  />
+                  <View
+                    className="h-1.5 flex-1 rounded-full"
+                    style={{ backgroundColor: colors.subtle }}
+                  />
+                  <View
+                    className="h-1.5 flex-1 rounded-full"
+                    style={{ backgroundColor: colors.subtle }}
+                  />
+                  <View
+                    className="h-1.5 flex-1 rounded-full"
+                    style={{ backgroundColor: colors.subtle }}
+                  />
                 </View>
               </View>
             ))}
             {activeLoans.length === 0 && (
               <View
-                className="w-[280px] rounded-xl border p-5 justify-center items-center"
-                style={{ backgroundColor: colors.surface, borderColor: colors.borderSubtle }}
-              >
+                className="w-[280px] items-center justify-center rounded-xl border p-5"
+                style={{ backgroundColor: colors.surface, borderColor: colors.borderSubtle }}>
                 <Text style={{ color: colors.textSecondary }}>{t('home.noActiveLoans')}</Text>
               </View>
             )}
@@ -274,32 +319,36 @@ export default function HomeScreen() {
             {t('home.upcomingPayments')}
           </Text>
           <View
-            className="rounded-xl overflow-hidden border"
-            style={{ backgroundColor: colors.surface, borderColor: colors.borderSubtle }}
-          >
+            className="overflow-hidden rounded-xl border"
+            style={{ backgroundColor: colors.surface, borderColor: colors.borderSubtle }}>
             {upcomingPayments.length > 0 ? (
               upcomingPayments.map((payment, idx) => (
                 <TouchableOpacity
                   key={idx}
                   activeOpacity={0.7}
-                  className="p-4 flex-row justify-between items-center border-b"
+                  className="flex-row items-center justify-between border-b p-4"
                   style={{
-                    borderBottomColor: idx === upcomingPayments.length - 1 ? 'transparent' : colors.borderSubtle,
-                  }}
-                >
+                    borderBottomColor:
+                      idx === upcomingPayments.length - 1 ? 'transparent' : colors.borderSubtle,
+                  }}>
                   <View className="flex-row items-center gap-3">
                     <View
-                      className="w-10 h-10 rounded-lg flex items-center justify-center border"
-                      style={{ backgroundColor: colors.subtle, borderColor: colors.borderSubtle }}
-                    >
-                      <Calendar size={20} color={idx === 0 ? colors.textPrimary : colors.textSecondary} />
+                      className="flex h-10 w-10 items-center justify-center rounded-lg border"
+                      style={{ backgroundColor: colors.subtle, borderColor: colors.borderSubtle }}>
+                      <Calendar
+                        size={20}
+                        color={idx === 0 ? colors.textPrimary : colors.textSecondary}
+                      />
                     </View>
                     <View>
-                      <Text className="text-base font-semibold" style={{ color: colors.textPrimary }}>
+                      <Text
+                        className="text-base font-semibold"
+                        style={{ color: colors.textPrimary }}>
                         {t('home.installment')}
                       </Text>
                       <Text className="text-sm" style={{ color: colors.textSecondary }}>
-                        {t('common.loanNumber', { id: payment.loanId.slice(0, 4) })} · {t('home.due')} {formatDate(new Date(payment.dueDate), 'short')}
+                        {t('common.loanNumber', { id: payment.loanId.slice(0, 4) })} ·{' '}
+                        {t('home.due')} {formatDate(new Date(payment.dueDate), 'short')}
                       </Text>
                     </View>
                   </View>
@@ -308,7 +357,9 @@ export default function HomeScreen() {
                       ${payment.amount.toLocaleString()}
                     </Text>
                     {idx === 0 ? (
-                      <Text className="text-xs font-semibold mt-1" style={{ color: colors.brandGreen }}>
+                      <Text
+                        className="mt-1 text-xs font-semibold"
+                        style={{ color: colors.brandGreen }}>
                         {t('home.payNow')}
                       </Text>
                     ) : null}
@@ -316,7 +367,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               ))
             ) : (
-              <View className="p-6 items-center">
+              <View className="items-center p-6">
                 <Text style={{ color: colors.textSecondary }}>{t('home.noUpcomingPayments')}</Text>
               </View>
             )}

@@ -19,8 +19,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={60}
-      >
+        keyboardVerticalOffset={60}>
         <View className="flex-1 pb-[60px]">
           {!isSettingsOpen && (
             <Header
@@ -31,13 +30,12 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
           <ScrollView
             contentContainerClassName="flex-grow"
             className="flex-1"
-            keyboardShouldPersistTaps="handled"
-          >
+            keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>
         </View>
         {!isSettingsOpen && (
-          <View className="absolute left-0 right-0 bottom-0 h-[60px] bg-transparent z-10">
+          <View className="absolute bottom-0 left-0 right-0 z-10 h-[60px] bg-transparent">
             <BottomBar activeTab={activeTab} setActiveTab={setActiveTab} />
           </View>
         )}

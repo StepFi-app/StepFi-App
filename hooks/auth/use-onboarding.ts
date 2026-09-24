@@ -47,20 +47,23 @@ export const useOnboarding = () => {
     setOnboardingComplete(true);
   }, [data, profile, setProfile, setOnboardingComplete]);
 
-  const isStepValid = useCallback((step: number) => {
-    switch (step) {
-      case 0:
-        return data.programType.length > 0;
-      case 1:
-        return data.monthlyIncome.length > 0 && !isNaN(parseFloat(data.monthlyIncome));
-      case 2:
-        return data.country.length > 0 && data.city.length > 0;
-      case 3:
-        return true;
-      default:
-        return false;
-    }
-  }, [data]);
+  const isStepValid = useCallback(
+    (step: number) => {
+      switch (step) {
+        case 0:
+          return data.programType.length > 0;
+        case 1:
+          return data.monthlyIncome.length > 0 && !isNaN(parseFloat(data.monthlyIncome));
+        case 2:
+          return data.country.length > 0 && data.city.length > 0;
+        case 3:
+          return true;
+        default:
+          return false;
+      }
+    },
+    [data]
+  );
 
   return {
     currentStep,

@@ -55,7 +55,7 @@ export function useTransaction(): UseTransactionReturn {
               : new TransactionError(
                   TransactionErrorCode.UNKNOWN,
                   err instanceof Error ? err.message : 'Transaction failed',
-                  err,
+                  err
                 );
           setError(txError);
           setStatus(TransactionStatus.ERROR);
@@ -64,7 +64,7 @@ export function useTransaction(): UseTransactionReturn {
         isExecuting.current = false;
       }
     },
-    [],
+    []
   );
 
   const reset = useCallback(() => {
