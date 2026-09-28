@@ -71,6 +71,7 @@ function useSentryUserContext() {
 
 function RootLayout() {
   const [i18nReady, setI18nReady] = useState(false);
+  const [securityHydrated, setSecurityHydrated] = useState(false);
   const hydrate = useAuthStore((s) => s.hydrate);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -99,6 +100,10 @@ function RootLayout() {
   useEffect(() => {
     void hydrate();
     void useUserStore.getState().hydrate();
+    useSecurityStore
+      .getState()
+      .hydrate()
+      .finally(() => setSecurityHydrated(true));
     initPromise.then(() => setI18nReady(true));
   }, [hydrate]);
 
@@ -106,6 +111,8 @@ function RootLayout() {
   useSentryUserContext();
 
   useEffect(() => {
+    if (!securityHydrated) return;
+
     if (!isLoading && isAuthenticated && !biometricCheckDone) {
       useSecurityStore.getState().markBiometricCheckDone();
       biometricService.isBiometricsEnabled().then((enabled) => {
@@ -118,7 +125,7 @@ function RootLayout() {
     if (!isAuthenticated) {
       useSecurityStore.getState().reset();
     }
-  }, [isLoading, isAuthenticated, biometricCheckDone]);
+  }, [isLoading, isAuthenticated, biometricCheckDone, securityHydrated]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
@@ -172,7 +179,7 @@ function RootLayout() {
     return () => unsubscribe();
   }, []);
 
-  if (isLoading || !i18nReady) {
+  if (isLoading || !i18nReady || !securityHydrated) {
     return null;
   }
 

@@ -4,11 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../constants/colors';
 import { biometricService } from '../security/biometric.service';
 import { useSecurityStore } from '../security/security.store';
+import { evaluateFailedAttempt } from '../security/lockout';
 import { useAuthStore } from '../../stores/auth.store';
 import { useUserStore } from '../../stores/user.store';
 import { useWalletStore } from '../../stores/wallet.store';
-
-const MAX_FAILED_ATTEMPTS = 3;
 
 type GateMode = 'loading' | 'biometric' | 'pin' | 'error';
 
@@ -31,14 +30,14 @@ export function BiometricGate() {
 
   const handleFailure = useCallback(async () => {
     const store = useSecurityStore.getState();
-    const newCount = store.failedAttempts + 1;
+    const outcome = evaluateFailedAttempt(store.failedAttempts);
     store.incrementFailedAttempts();
-    if (newCount >= MAX_FAILED_ATTEMPTS) {
+    if (outcome.lockedOut) {
       await handleLogout();
     } else {
-      const remaining = MAX_FAILED_ATTEMPTS - newCount;
+      const { remainingAttempts } = outcome;
       setErrorMessage(
-        `Verification failed. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`
+        `Verification failed. ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`
       );
     }
   }, [handleLogout]);
