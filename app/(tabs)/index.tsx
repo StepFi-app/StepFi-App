@@ -194,18 +194,23 @@ export default function HomeScreen() {
         {/* Quick Actions Grid */}
         <View className="mb-8 flex-row justify-between">
           {[
-            { icon: Plus, label: t('home.apply'), color: colors.brandGreen, route: '/(tabs)/pay' },
+            {
+              icon: Plus,
+              label: t('home.apply'),
+              color: colors.brandGreen,
+              route: '/(tabs)/simulate',
+            },
             {
               icon: ArrowUpRight,
               label: t('home.pay'),
               color: colors.textPrimary,
-              route: '/(tabs)/pay',
+              route: '/(tabs)/loans',
             },
             {
               icon: History,
               label: t('home.history'),
               color: colors.textPrimary,
-              route: '/(tabs)/pay',
+              route: '/(tabs)/calendar',
             },
             {
               icon: BadgeCheck,
