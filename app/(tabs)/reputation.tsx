@@ -6,6 +6,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -27,12 +28,14 @@ import {
 } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { Card } from '../../components/shared/Card';
+import { Input } from '../../components/shared/Input';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { useUserStore } from '../../stores/user.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { reputationService } from '../../services/reputation.service';
 import { useReputationMilestones } from '../../hooks/useReputationMilestones';
 import { useVouch } from '../../hooks/useVouch';
+import { validateVouchRecipient } from '../../hooks/reputation/vouch-utils';
 import { useTranslation } from '../../hooks/useTranslation';
 import { TransactionStatus } from '../../types/transaction.types';
 import { TierUpModal } from '../../components/reputation/TierUpModal';
@@ -90,6 +93,7 @@ export default function ReputationScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mentorAddress, setMentorAddress] = useState('');
 
   const IMPROVEMENT_TIPS: TipItem[] = [
     { icon: CheckCircle, text: t('reputation.tip1'), color: colors.success, key: 'tip1' },
@@ -113,12 +117,26 @@ export default function ReputationScreen() {
     vouchStatus === TransactionStatus.SIGNING || vouchStatus === TransactionStatus.BROADCASTING;
 
   const handleVouch = useCallback(() => {
+    const own = walletAddress ?? '';
+    const validationError = validateVouchRecipient(own, mentorAddress);
+
+    if (validationError !== null) {
+      const message =
+        validationError === 'self'
+          ? t('reputation.vouchSelfError')
+          : validationError === 'format'
+            ? t('reputation.vouchInvalidAddress')
+            : t('reputation.vouchAddressRequired');
+      Alert.alert(t('reputation.vouchFailed'), message);
+      return;
+    }
+
     void submitVouch({
-      mentorWallet: walletAddress ?? '',
-      learnerWallet: walletAddress ?? '',
+      mentorWallet: mentorAddress.trim(),
+      learnerWallet: own,
       amount: 100,
     });
-  }, [walletAddress, submitVouch]);
+  }, [walletAddress, mentorAddress, submitVouch, t]);
 
   const fetchReputation = useCallback(async () => {
     if (!walletAddress) {
@@ -324,6 +342,15 @@ export default function ReputationScreen() {
             </Text>
           </View>
 
+          <Input
+            label={t('reputation.mentorLabel')}
+            placeholder={t('reputation.mentorPlaceholder')}
+            value={mentorAddress}
+            onChangeText={setMentorAddress}
+            autoCapitalize="characters"
+            autoCorrect={false}
+          />
+
           {vouchStatus === TransactionStatus.ERROR && vouchError && (
             <View className="rounded-xl bg-red-50 p-3">
               <View className="flex-row items-start gap-2">
@@ -366,8 +393,9 @@ export default function ReputationScreen() {
 
           <TouchableOpacity
             className={`items-center rounded-xl py-3 ${isVouching ? 'bg-cta' : 'bg-ctaStrong'}`}
+            style={{ opacity: mentorAddress.trim() === '' ? 0.5 : 1 }}
             onPress={handleVouch}
-            disabled={isVouching}>
+            disabled={isVouching || mentorAddress.trim() === ''}>
             {isVouching ? (
               <View className="flex-row items-center gap-2">
                 <ActivityIndicator size="small" color="#FFFFFF" />

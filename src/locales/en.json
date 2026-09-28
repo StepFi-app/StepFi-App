@@ -106,7 +106,12 @@
     "tip1": "Pay installments on time to increase your score",
     "tip2": "Avoid late payments — each one reduces your score",
     "tip3": "Get vouched by a mentor to boost your credit limit",
-    "tip4": "Complete more loans to build a strong payment history"
+    "tip4": "Complete more loans to build a strong payment history",
+    "mentorLabel": "Mentor wallet address",
+    "mentorPlaceholder": "G... (the mentor vouching for you)",
+    "vouchAddressRequired": "Enter the mentor's wallet address.",
+    "vouchInvalidAddress": "Enter a valid Stellar wallet address (starts with G).",
+    "vouchSelfError": "You can't vouch for yourself. Enter a different wallet address."
   },
   "settings": {
     "settings": "Settings",

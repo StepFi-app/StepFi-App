@@ -106,7 +106,12 @@
     "tip1": "Payer les échéances à temps pour augmenter votre score",
     "tip2": "Évitez les retards de paiement — chacun réduit votre score",
     "tip3": "Faites-vous recommander par un mentor pour booster votre crédit",
-    "tip4": "Effectuez plus de prêts pour construire un historique solide"
+    "tip4": "Effectuez plus de prêts pour construire un historique solide",
+    "mentorLabel": "Adresse du portefeuille du mentor",
+    "mentorPlaceholder": "G... (le mentor qui se porte garant)",
+    "vouchAddressRequired": "Saisissez l'adresse du portefeuille du mentor.",
+    "vouchInvalidAddress": "Saisissez une adresse Stellar valide (commence par G).",
+    "vouchSelfError": "Vous ne pouvez pas vous porter garant de vous-même. Saisissez une autre adresse."
   },
   "settings": {
     "settings": "Paramètres",
