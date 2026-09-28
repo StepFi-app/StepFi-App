@@ -4,9 +4,13 @@ Update this file after every completed screen, component, hook, or architectural
 
 ---
 
-## 2026-07-20 - Development paused
+## 2026-09-28 - Development resumed
 
-StepFi-App is temporarily paused for all repos except critical fixes. Reason: maintainer is setting up Android Studio to properly monitor and screen-record all future changes to this repo before accepting them. Going forward, every PR to StepFi-App must include screenshots or a screen recording demonstrating the change running on an actual Android emulator/device, not just passing `npx expo export --platform web`. This repo will resume active issue creation and review once the Android Studio verification workflow is established.
+StepFi-App is active again. The July pause was pending an automated verification workflow;
+that gate now exists. CI runs a **blocking** `Lint / Typecheck / Test` job alongside
+`npx expo export --platform web`, and it is a **required status check on `main`** — no PR
+merges unless lint, `tsc --noEmit`, the test suite, and the web export all pass. That
+enforced gate is the verification workflow, so active issue work and review have resumed.
 
 ---
 
