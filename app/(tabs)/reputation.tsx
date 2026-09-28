@@ -9,13 +9,6 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useDerivedValue,
-  withTiming,
-  Easing,
-  runOnJS,
-} from 'react-native-reanimated';
 import {
   Star,
   AlertCircle,
@@ -40,6 +33,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { TransactionStatus } from '../../types/transaction.types';
 import { TierUpModal } from '../../components/reputation/TierUpModal';
 import { MilestoneModal } from '../../components/reputation/MilestoneModal';
+import { ReputationRing } from '../../components/reputation/ReputationRing';
 
 interface TipItem {
   icon: typeof CheckCircle;
@@ -62,28 +56,6 @@ function getTierDescription(tier: string, t: (key: string, opts?: any) => string
       return t('reputation.descDefault');
   }
 }
-
-const AnimatedScore = ({ score }: { score: number }) => {
-  const animatedValue = useSharedValue(0);
-  const [displayScore, setDisplayScore] = useState(0);
-
-  useEffect(() => {
-    animatedValue.value = withTiming(score, {
-      duration: 1500,
-      easing: Easing.out(Easing.quad),
-    });
-  }, [score, animatedValue]);
-
-  useDerivedValue(() => {
-    runOnJS(setDisplayScore)(Math.floor(animatedValue.value));
-  });
-
-  return (
-    <Text className="text-4xl font-bold" style={{ color: colors.textPrimary }}>
-      {displayScore}
-    </Text>
-  );
-};
 
 export default function ReputationScreen() {
   const { t } = useTranslation();
@@ -226,19 +198,8 @@ export default function ReputationScreen() {
 
         {/* Main score card */}
         <Card className="mb-4 items-center gap-4 p-6">
-          {/* Score circle */}
-          <View
-            className="h-32 w-32 items-center justify-center rounded-full"
-            style={{
-              borderWidth: 4,
-              borderColor: tierColor + '40',
-              backgroundColor: tierColor + '10',
-            }}>
-            <AnimatedScore score={reputation?.score ?? 0} />
-            <Text className="text-xs" style={{ color: colors.textMuted }}>
-              {t('reputation.scoreOutOf')}
-            </Text>
-          </View>
+          {/* Score ring */}
+          <ReputationRing score={reputation?.score ?? 0} tierColor={tierColor} />
 
           {/* Tier badge */}
           <View className="rounded-xl px-4 py-2" style={{ backgroundColor: tierColor + '20' }}>
