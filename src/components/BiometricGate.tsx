@@ -8,6 +8,7 @@ import { evaluateFailedAttempt } from '../security/lockout';
 import { useAuthStore } from '../../stores/auth.store';
 import { useUserStore } from '../../stores/user.store';
 import { useWalletStore } from '../../stores/wallet.store';
+import { useLoansStore } from '../../stores/loans.store';
 
 type GateMode = 'loading' | 'biometric' | 'pin' | 'error';
 
@@ -21,12 +22,14 @@ export function BiometricGate() {
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const clearUser = useUserStore((s) => s.clearUser);
   const disconnect = useWalletStore((s) => s.disconnect);
+  const clearLoans = useLoansStore((s) => s.clearLoans);
 
   const handleLogout = useCallback(async () => {
     await disconnect();
     clearUser();
+    clearLoans();
     await clearAuth();
-  }, [clearAuth, clearUser, disconnect]);
+  }, [clearAuth, clearUser, clearLoans, disconnect]);
 
   const handleFailure = useCallback(async () => {
     const store = useSecurityStore.getState();

@@ -28,6 +28,7 @@ import { Card } from '../../components/shared/Card';
 import { useAuthStore } from '../../stores/auth.store';
 import { useUserStore } from '../../stores/user.store';
 import { useWalletStore } from '../../stores/wallet.store';
+import { useLoansStore } from '../../stores/loans.store';
 import { biometricService } from '../../src/security/biometric.service';
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -92,6 +93,7 @@ export default function SettingsScreen() {
   const profile = useUserStore((s) => s.profile);
   const clearUser = useUserStore((s) => s.clearUser);
   const disconnect = useWalletStore((s) => s.disconnect);
+  const clearLoans = useLoansStore((s) => s.clearLoans);
   const [copied, setCopied] = useState(false);
 
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
@@ -134,6 +136,7 @@ export default function SettingsScreen() {
         onPress: async () => {
           await disconnect();
           clearUser();
+          clearLoans();
           await clearAuth();
         },
       },
