@@ -207,7 +207,8 @@
       "walletAddress": "Wallet address",
       "notConnected": "Not connected",
       "saving": "Saving...",
-      "continue": "Continue"
+      "continue": "Continue",
+      "saveFailed": "We couldn't save your profile. Please try again."
     },
     "onboarding": {
       "title": "Complete your profile",

@@ -7,6 +7,7 @@ import {
   Platform,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -67,8 +68,11 @@ export default function RegisterScreen() {
 
       await setTokens('mock-access-token', 'mock-refresh-token');
       await setWallet(publicKey ?? '');
-    } catch {
-      // Error handled — user stays on screen
+    } catch (error) {
+      // Surface the failure to the user and log context for diagnosis;
+      // the user stays on the screen so they can retry.
+      console.error('[register] failed to complete registration', error);
+      Alert.alert(t('common.somethingWentWrong'), t('auth.register.saveFailed'));
     } finally {
       setIsSubmitting(false);
     }

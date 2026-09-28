@@ -207,7 +207,8 @@
       "walletAddress": "Adresse du portefeuille",
       "notConnected": "Non connecté",
       "saving": "Enregistrement...",
-      "continue": "Continuer"
+      "continue": "Continuer",
+      "saveFailed": "Nous n'avons pas pu enregistrer votre profil. Veuillez réessayer."
     }
   },
   "components": {

@@ -206,7 +206,8 @@
       "walletAddress": "Endereço da carteira",
       "notConnected": "Não conectado",
       "saving": "Salvando...",
-      "continue": "Continuar"
+      "continue": "Continuar",
+      "saveFailed": "Não foi possível salvar seu perfil. Tente novamente."
     }
   },
   "components": {
