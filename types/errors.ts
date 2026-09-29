@@ -30,6 +30,8 @@ export enum ApiErrorCode {
   NETWORK_ERROR = 'NETWORK_ERROR',
   /** Request was queued for offline replay */
   OFFLINE_QUEUED = 'OFFLINE_QUEUED',
+  /** Wallet failed to sign, or the user rejected the signing request */
+  WALLET_SIGNING_FAILED = 'WALLET_SIGNING_FAILED',
   /** Catch-all for unexpected errors */
   UNKNOWN = 'UNKNOWN',
 }
@@ -168,6 +170,8 @@ function userFacingMessage(code: ApiErrorCode, statusCode: number, serverMsg?: s
       return 'A network error occurred. Please check your connection.';
     case ApiErrorCode.OFFLINE_QUEUED:
       return "We'll complete this action once you're back online.";
+    case ApiErrorCode.WALLET_SIGNING_FAILED:
+      return 'Could not sign the request with your wallet. Please try again.';
     default:
       return 'An unexpected error occurred. Please try again.';
   }

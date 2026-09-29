@@ -16,6 +16,7 @@ import { Input } from '../../components/shared/Input';
 import { useUserStore } from '../../stores/user.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { useWalletStore } from '../../stores/wallet.store';
+import { authService } from '../../services/auth.service';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { LearnerProfile } from '../../types/user.types';
 
@@ -27,6 +28,8 @@ export default function RegisterScreen() {
   const setTokens = useAuthStore((s) => s.setTokens);
   const setWallet = useAuthStore((s) => s.setWallet);
   const publicKey = useWalletStore((s) => s.address);
+  const walletType = useWalletStore((s) => s.walletType);
+  const sessionId = useWalletStore((s) => s.sessionId);
 
   const [displayName, setDisplayName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,12 +52,16 @@ export default function RegisterScreen() {
 
   const handleComplete = async () => {
     if (!isValid) return;
+    if (!publicKey || !walletType) {
+      setSubmitError('No wallet connected. Please connect your wallet and try again.');
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
       const profile: LearnerProfile = {
-        walletAddress: publicKey ?? '',
+        walletAddress: publicKey,
         displayName: displayName.trim(),
         role: role ?? 'learner',
         school: isLearner ? school.trim() : undefined,
@@ -66,8 +73,11 @@ export default function RegisterScreen() {
 
       setProfile(profile);
 
-      await setTokens('mock-access-token', 'mock-refresh-token');
-      await setWallet(publicKey ?? '');
+      // Real wallet-signature auth: sign the SEP-10-style challenge with the
+      // connected wallet and exchange it for JWT tokens.
+      const tokens = await authService.authenticate(publicKey, walletType, sessionId);
+      await setTokens(tokens.accessToken, tokens.refreshToken);
+      await setWallet(publicKey);
     } catch (err) {
       console.error('[register] failed to complete registration', err);
       const message =
