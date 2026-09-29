@@ -105,7 +105,12 @@
     "tip1": "Pague as parcelas em dia para aumentar sua pontuação",
     "tip2": "Evite atrasos — cada um reduz sua pontuação",
     "tip3": "Seja recomendado por um mentor para aumentar seu crédito",
-    "tip4": "Complete mais empréstimos para construir um histórico sólido"
+    "tip4": "Complete mais empréstimos para construir um histórico sólido",
+    "mentorLabel": "Endereço da carteira do mentor",
+    "mentorPlaceholder": "G... (o mentor que se responsabiliza por você)",
+    "vouchAddressRequired": "Informe o endereço da carteira do mentor.",
+    "vouchInvalidAddress": "Informe um endereço Stellar válido (começa com G).",
+    "vouchSelfError": "Você não pode se responsabilizar por si mesmo. Informe outro endereço."
   },
   "settings": {
     "settings": "Configurações",
@@ -165,11 +170,11 @@
       "connecting": "Conectando...",
       "connectStellarWallet": "Conectar carteira Stellar",
       "dontHaveWallet": "Não tem uma carteira?",
-    "walletLobstr": "Lobstr",
-    "walletXbull": "xBull",
-    "score": "Pontuação",
-    "rate": "Taxa",
-    "max": "Máx"
+      "walletLobstr": "Lobstr",
+      "walletXbull": "xBull",
+      "score": "Pontuação",
+      "rate": "Taxa",
+      "max": "Máx"
     },
     "roleSelect": {
       "title": "Como você usará o StepFi?",
@@ -206,7 +211,8 @@
       "walletAddress": "Endereço da carteira",
       "notConnected": "Não conectado",
       "saving": "Salvando...",
-      "continue": "Continuar"
+      "continue": "Continuar",
+      "saveFailed": "Não foi possível salvar seu perfil. Tente novamente."
     }
   },
   "components": {
@@ -220,6 +226,19 @@
     }
   },
   "weekdayHeaders": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
-  "monthNames": ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
+  "monthNames": [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro"
+  ],
   "tierNames": ["Iniciante", "Bronze", "Prata", "Ouro"]
 }

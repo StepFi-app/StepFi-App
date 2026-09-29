@@ -26,11 +26,11 @@ export function useLoanSimulator() {
     const totalInterest = amount * (interestRate / 100) * (term / 12);
     const totalRepayment = amount + totalInterest;
     const monthlyRepayment = totalRepayment / term;
-    
+
     const debtToIncomeRatio = income > 0 ? monthlyRepayment / income : 0;
-    
+
     let status: AffordabilityStatus = 'green';
-    if (debtToIncomeRatio >= 0.30) {
+    if (debtToIncomeRatio >= 0.3) {
       status = 'red';
     } else if (debtToIncomeRatio >= 0.15) {
       status = 'amber';

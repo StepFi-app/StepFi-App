@@ -37,9 +37,7 @@ export interface BiometricStatus {
   isEnrolled: boolean;
 }
 
-export type AuthenticationResult =
-  | { success: true }
-  | { success: false; error: string };
+export type AuthenticationResult = { success: true } | { success: false; error: string };
 
 function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
@@ -98,14 +96,8 @@ export const biometricService = {
   async setPin(pin: string): Promise<void> {
     const randomBytes = Crypto.getRandomBytes(16);
     const salt = bytesToHex(randomBytes);
-    const hash = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      salt + pin,
-    );
-    await Promise.all([
-      storage.setItem(PIN_SALT_KEY, salt),
-      storage.setItem(PIN_HASH_KEY, hash),
-    ]);
+    const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, salt + pin);
+    await Promise.all([storage.setItem(PIN_SALT_KEY, salt), storage.setItem(PIN_HASH_KEY, hash)]);
   },
 
   async verifyPin(pin: string): Promise<boolean> {
@@ -119,7 +111,7 @@ export const biometricService = {
       }
       const computedHash = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
-        salt + pin,
+        salt + pin
       );
       return computedHash === storedHash;
     } catch {
@@ -137,10 +129,7 @@ export const biometricService = {
   },
 
   async clearPin(): Promise<void> {
-    await Promise.all([
-      storage.removeItem(PIN_HASH_KEY),
-      storage.removeItem(PIN_SALT_KEY),
-    ]);
+    await Promise.all([storage.removeItem(PIN_HASH_KEY), storage.removeItem(PIN_SALT_KEY)]);
   },
 
   async disableBiometrics(): Promise<void> {

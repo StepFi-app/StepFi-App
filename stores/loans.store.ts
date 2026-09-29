@@ -9,7 +9,7 @@ interface LoansState {
   selectLoan: (id: string) => void;
   clearLoans: () => void;
   setLoading: (loading: boolean) => void;
-  
+
   // Persisted simulation state
   simulatedAmount: number | null;
   simulatedTerm: number | null;

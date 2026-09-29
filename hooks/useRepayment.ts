@@ -14,15 +14,11 @@ export function useRepayment(): UseRepaymentReturn {
     async (loanId: string, installmentIndex: number, amount: number) => {
       if (status !== 'idle') return;
 
-      const { unsignedXdr } = await loansService.repayInstallment(
-        loanId,
-        installmentIndex,
-        amount,
-      );
+      const { unsignedXdr } = await loansService.repayInstallment(loanId, installmentIndex, amount);
 
       await execute(unsignedXdr);
     },
-    [status, execute],
+    [status, execute]
   );
 
   return { status, txHash, error, execute, repay, reset };
