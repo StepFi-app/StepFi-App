@@ -11,6 +11,9 @@ import {
   Laptop,
   Calendar,
   AlertCircle,
+  Loader,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { EmptyState } from '../../components/shared/EmptyState';
@@ -69,6 +72,16 @@ export default function HomeScreen() {
     setIsRefreshing(true);
     void fetchDashboard();
   };
+
+  const pendingTransactions = useLoansStore((s) => s.pendingTransactions);
+  const setPendingTransactions = useLoansStore((s) => s.setPendingTransactions);
+
+  // Sync pending txs from the persisted queue on mount
+  useEffect(() => {
+    import('../../src/transactions/pending-queue').then(({ pendingQueue }) => {
+      pendingQueue.getAll().then(setPendingTransactions);
+    });
+  }, [setPendingTransactions]);
 
   const activeLoans = loans.filter((l) => l.status === 'active');
   const nextInstallment = activeLoans
@@ -190,6 +203,67 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
+
+        {/* Pending Transactions Banner */}
+        {pendingTransactions.filter((tx) => tx.status === 'pending').length > 0 && (
+          <View
+            className="mb-4 flex-row items-center gap-3 rounded-xl border p-4"
+            style={{
+              backgroundColor: colors.warningDim,
+              borderColor: colors.warning + '40',
+            }}>
+            <View
+              className="h-10 w-10 items-center justify-center rounded-xl"
+              style={{ backgroundColor: colors.warning + '20' }}>
+              <Loader size={20} color={colors.warning} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-semibold" style={{ color: colors.warning }}>
+                Transaction In Progress
+              </Text>
+              <Text className="mt-0.5 text-xs" style={{ color: colors.textSecondary }}>
+                {pendingTransactions.filter((tx) => tx.status === 'pending').length} pending
+                transaction(s) — tracking on-chain
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Transaction Result Banner */}
+        {pendingTransactions.filter(
+          (tx) => tx.status === 'confirmed' || tx.status === 'failed' || tx.status === 'expired'
+        ).length > 0 && (
+          <View className="mb-4 gap-2 rounded-xl p-3" style={{ backgroundColor: colors.subtle }}>
+            <Text className="mb-1 text-xs font-semibold" style={{ color: colors.textMuted }}>
+              Recent Transactions
+            </Text>
+            {pendingTransactions
+              .filter((tx) => tx.status !== 'pending')
+              .slice(0, 5)
+              .map((tx) => {
+                const isConfirmed = tx.status === 'confirmed';
+                const isFailed = tx.status === 'failed' || tx.status === 'expired';
+                const StatusIcon = isConfirmed ? CheckCircle : XCircle;
+                const statusColor = isConfirmed ? colors.success : colors.error;
+                return (
+                  <View key={tx.id} className="flex-row items-center gap-2 rounded-lg py-2">
+                    <StatusIcon size={14} color={statusColor} />
+                    <Text className="flex-1 text-xs" style={{ color: colors.textSecondary }}>
+                      {tx.type === 'REPAYMENT'
+                        ? 'Repayment'
+                        : tx.type === 'LOAN_CREATION'
+                          ? 'Loan Creation'
+                          : tx.type}{' '}
+                      — ${tx.amount?.toLocaleString() ?? ''}
+                    </Text>
+                    <Text className="text-[10px]" style={{ color: statusColor }}>
+                      {isConfirmed ? 'Confirmed' : 'Failed'}
+                    </Text>
+                  </View>
+                );
+              })}
+          </View>
+        )}
 
         {/* Quick Actions Grid */}
         <View className="mb-8 flex-row justify-between">
