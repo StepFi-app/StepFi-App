@@ -66,7 +66,9 @@ export const notificationsService = {
       const reminderDates = getReminderDates(installment.dueDate);
 
       for (const date of reminderDates) {
-        const daysBefore = Math.round((new Date(installment.dueDate).getTime() - date.getTime()) / DAY_MS);
+        const daysBefore = Math.round(
+          (new Date(installment.dueDate).getTime() - date.getTime()) / DAY_MS
+        );
 
         await ExpoNotifications.scheduleNotificationAsync({
           content: {
@@ -106,8 +108,8 @@ export const notificationsService = {
     try {
       const defaultCalendarSource =
         Platform.OS === 'ios'
-          ? await ExpoCalendar.getDefaultCalendarAsync()
-          : { isLocalAccount: true, name: 'StepFi', type: ExpoCalendar.CalendarSourceType.LOCAL };
+          ? (await ExpoCalendar.getDefaultCalendarAsync()).source
+          : { isLocalAccount: true, name: 'StepFi', type: ExpoCalendar.SourceType.LOCAL };
 
       const calendarId = await ExpoCalendar.createCalendarAsync({
         title: 'StepFi Payments',
@@ -139,7 +141,7 @@ export const notificationsService = {
     if (!installments.length) return 0;
 
     const sorted = [...installments].sort(
-      (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime(),
+      (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
     );
 
     let streak = 0;

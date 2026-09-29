@@ -75,7 +75,7 @@ export const pendingQueue = {
     id: string,
     status: PendingTransactionStatus,
     retryCount?: number,
-    lastPolledAt?: number,
+    lastPolledAt?: number
   ): Promise<boolean> {
     const queue = await loadAll();
     const idx = queue.findIndex((t) => t.id === id);

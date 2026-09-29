@@ -28,6 +28,7 @@ import { Card } from '../../components/shared/Card';
 import { useAuthStore } from '../../stores/auth.store';
 import { useUserStore } from '../../stores/user.store';
 import { useWalletStore } from '../../stores/wallet.store';
+import { useLoansStore } from '../../stores/loans.store';
 import { biometricService } from '../../src/security/biometric.service';
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -54,21 +55,18 @@ function MenuItem({
 }: MenuItemProps) {
   return (
     <TouchableOpacity
-      className="flex-row items-center py-4 gap-3"
+      className="flex-row items-center gap-3 py-4"
       activeOpacity={0.7}
-      onPress={onPress}
-    >
+      onPress={onPress}>
       <View
-        className="h-10 w-10 rounded-xl items-center justify-center"
-        style={{ backgroundColor: danger ? colors.errorDim : iconBg }}
-      >
+        className="h-10 w-10 items-center justify-center rounded-xl"
+        style={{ backgroundColor: danger ? colors.errorDim : iconBg }}>
         <Icon size={20} color={danger ? colors.error : iconColor} />
       </View>
       <View className="flex-1">
         <Text
           className="text-sm font-medium"
-          style={{ color: danger ? colors.error : colors.textPrimary }}
-        >
+          style={{ color: danger ? colors.error : colors.textPrimary }}>
           {label}
         </Text>
         {subtitle ? (
@@ -94,7 +92,8 @@ export default function SettingsScreen() {
   const walletAddress = useAuthStore((s) => s.walletAddress);
   const profile = useUserStore((s) => s.profile);
   const clearUser = useUserStore((s) => s.clearUser);
-  const setDisconnected = useWalletStore((s) => s.setDisconnected);
+  const disconnect = useWalletStore((s) => s.disconnect);
+  const clearLoans = useLoansStore((s) => s.clearLoans);
   const [copied, setCopied] = useState(false);
 
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
@@ -110,8 +109,7 @@ export default function SettingsScreen() {
   useEffect(() => {
     async function loadState() {
       const enabled = await biometricService.isBiometricsEnabled();
-      const { isAvailable, isEnrolled } =
-        await biometricService.checkBiometricAvailability();
+      const { isAvailable, isEnrolled } = await biometricService.checkBiometricAvailability();
       setBiometricsEnabled(enabled);
       setBiometricsAvailable(isAvailable && isEnrolled);
     }
@@ -130,22 +128,19 @@ export default function SettingsScreen() {
   };
 
   const handleSignOut = () => {
-    Alert.alert(
-      t('settings.signOutTitle'),
-      t('settings.signOutMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('settings.signOutConfirm'),
-          style: 'destructive',
-          onPress: async () => {
-            setDisconnected();
-            clearUser();
-            await clearAuth();
-          },
+    Alert.alert(t('settings.signOutTitle'), t('settings.signOutMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('settings.signOutConfirm'),
+        style: 'destructive',
+        onPress: async () => {
+          await disconnect();
+          clearUser();
+          clearLoans();
+          await clearAuth();
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const openPinSetup = useCallback(() => {
@@ -182,8 +177,7 @@ export default function SettingsScreen() {
   const handleToggleBiometrics = useCallback(
     async (value: boolean) => {
       if (value) {
-        const { isAvailable, isEnrolled } =
-          await biometricService.checkBiometricAvailability();
+        const { isAvailable, isEnrolled } = await biometricService.checkBiometricAvailability();
         if (!isAvailable || !isEnrolled) {
           const hasExistingPin = await biometricService.hasPin();
           if (hasExistingPin) {
@@ -206,62 +200,47 @@ export default function SettingsScreen() {
           }
         }
       } else {
-        Alert.alert(
-          t('settings.disableBiometricTitle'),
-          t('settings.disableBiometricMessage'),
-          [
-            { text: t('common.cancel'), style: 'cancel' },
-            {
-              text: t('settings.disableBiometricConfirm'),
-              style: 'destructive',
-              onPress: async () => {
-                await biometricService.disableBiometrics();
-                setBiometricsEnabled(false);
-              },
+        Alert.alert(t('settings.disableBiometricTitle'), t('settings.disableBiometricMessage'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('settings.disableBiometricConfirm'),
+            style: 'destructive',
+            onPress: async () => {
+              await biometricService.disableBiometrics();
+              setBiometricsEnabled(false);
             },
-          ],
-        );
+          },
+        ]);
       }
     },
-    [openPinSetup, t],
+    [openPinSetup, t]
   );
 
-  const currentLangLabel = LANGUAGES.find((l) => l.code === currentLanguage)?.label ?? LANGUAGES[0].label;
+  const currentLangLabel =
+    LANGUAGES.find((l) => l.code === currentLanguage)?.label ?? LANGUAGES[0].label;
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-      >
-        <Text
-          className="text-2xl font-bold mt-2 mb-6"
-          style={{ color: colors.textPrimary }}
-        >
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+        <Text className="mb-6 mt-2 text-2xl font-bold" style={{ color: colors.textPrimary }}>
           {t('settings.settings')}
         </Text>
 
         {/* Profile Card */}
-        <Card className="mb-6 p-5 gap-4">
+        <Card className="mb-6 gap-4 p-5">
           <View className="flex-row items-center gap-4">
             <View
-              className="h-14 w-14 rounded-full items-center justify-center"
-              style={{ backgroundColor: colors.brandBlueDim }}
-            >
+              className="h-14 w-14 items-center justify-center rounded-full"
+              style={{ backgroundColor: colors.brandBlueDim }}>
               <User size={28} color={colors.brandBlue} />
             </View>
             <View className="flex-1">
-              <Text
-                className="text-lg font-semibold"
-                style={{ color: colors.textPrimary }}
-              >
+              <Text className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
                 {profile?.displayName ?? t('settings.defaultName')}
               </Text>
-              <Text
-                className="text-xs capitalize"
-                style={{ color: colors.textMuted }}
-              >
-                {profile?.role ?? t('settings.defaultRole')} · {profile?.school ?? profile?.organization ?? ''}
+              <Text className="text-xs capitalize" style={{ color: colors.textMuted }}>
+                {profile?.role ?? t('settings.defaultRole')} ·{' '}
+                {profile?.school ?? profile?.organization ?? ''}
               </Text>
             </View>
           </View>
@@ -270,13 +249,9 @@ export default function SettingsScreen() {
             className="flex-row items-center gap-3 rounded-xl p-3"
             style={{ backgroundColor: colors.subtle }}
             activeOpacity={0.7}
-            onPress={handleCopyAddress}
-          >
+            onPress={handleCopyAddress}>
             <Wallet size={16} color={colors.textMuted} />
-            <Text
-              className="text-sm flex-1 font-mono"
-              style={{ color: colors.textSecondary }}
-            >
+            <Text className="flex-1 font-mono text-sm" style={{ color: colors.textSecondary }}>
               {truncatedAddress}
             </Text>
             {copied ? (
@@ -289,9 +264,8 @@ export default function SettingsScreen() {
 
         {/* Account Section */}
         <Text
-          className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
-          style={{ color: colors.textMuted }}
-        >
+          className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wide"
+          style={{ color: colors.textMuted }}>
           {t('settings.account')}
         </Text>
         <Card className="mb-6 px-4">
@@ -316,9 +290,8 @@ export default function SettingsScreen() {
 
         {/* Language Section */}
         <Text
-          className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
-          style={{ color: colors.textMuted }}
-        >
+          className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wide"
+          style={{ color: colors.textMuted }}>
           {t('settings.language')}
         </Text>
         <Card className="mb-6 px-4">
@@ -334,24 +307,19 @@ export default function SettingsScreen() {
 
         {/* Security Section */}
         <Text
-          className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
-          style={{ color: colors.textMuted }}
-        >
+          className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wide"
+          style={{ color: colors.textMuted }}>
           {t('settings.security')}
         </Text>
         <Card className="mb-6 px-4">
-          <View className="flex-row items-center py-4 gap-3">
+          <View className="flex-row items-center gap-3 py-4">
             <View
-              className="h-10 w-10 rounded-xl items-center justify-center"
-              style={{ backgroundColor: colors.brandBlueDim }}
-            >
+              className="h-10 w-10 items-center justify-center rounded-xl"
+              style={{ backgroundColor: colors.brandBlueDim }}>
               <Fingerprint size={20} color={colors.brandBlue} />
             </View>
             <View className="flex-1">
-              <Text
-                className="text-sm font-medium"
-                style={{ color: colors.textPrimary }}
-              >
+              <Text className="text-sm font-medium" style={{ color: colors.textPrimary }}>
                 {t('settings.biometricLock')}
               </Text>
               <Text className="text-xs" style={{ color: colors.textMuted }}>
@@ -373,9 +341,8 @@ export default function SettingsScreen() {
 
         {/* Support Section */}
         <Text
-          className="text-xs font-semibold uppercase tracking-wide mb-2 ml-1"
-          style={{ color: colors.textMuted }}
-        >
+          className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wide"
+          style={{ color: colors.textMuted }}>
           {t('settings.support')}
         </Text>
         <Card className="mb-6 px-4">
@@ -410,10 +377,7 @@ export default function SettingsScreen() {
           />
         </Card>
 
-        <Text
-          className="text-xs text-center mt-6"
-          style={{ color: colors.textFaint }}
-        >
+        <Text className="mt-6 text-center text-xs" style={{ color: colors.textFaint }}>
           {t('settings.versionLabel')}
         </Text>
       </ScrollView>
@@ -423,20 +387,16 @@ export default function SettingsScreen() {
         visible={languageModalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setLanguageModalVisible(false)}
-      >
+        onRequestClose={() => setLanguageModalVisible(false)}>
         <View
           className="flex-1 items-center justify-center px-8"
-          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
-        >
+          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
           <View
-            className="w-full rounded-2xl p-6 gap-2"
-            style={{ backgroundColor: colors.surface }}
-          >
+            className="w-full gap-2 rounded-2xl p-6"
+            style={{ backgroundColor: colors.surface }}>
             <Text
-              className="text-xl font-bold text-center mb-4"
-              style={{ color: colors.textPrimary }}
-            >
+              className="mb-4 text-center text-xl font-bold"
+              style={{ color: colors.textPrimary }}>
               {t('settings.language')}
             </Text>
             {LANGUAGES.map((lang) => {
@@ -444,34 +404,24 @@ export default function SettingsScreen() {
               return (
                 <TouchableOpacity
                   key={lang.code}
-                  className="flex-row items-center justify-between py-4 px-3 rounded-xl"
+                  className="flex-row items-center justify-between rounded-xl px-3 py-4"
                   style={{ backgroundColor: isActive ? colors.subtle : 'transparent' }}
                   activeOpacity={0.7}
                   onPress={async () => {
                     await changeLanguage(lang.code);
                     setLanguageModalVisible(false);
-                  }}
-                >
-                  <Text
-                    className="text-base"
-                    style={{ color: colors.textPrimary }}
-                  >
+                  }}>
+                  <Text className="text-base" style={{ color: colors.textPrimary }}>
                     {lang.label}
                   </Text>
-                  {isActive ? (
-                    <CheckCircle size={20} color={colors.brandGreen} />
-                  ) : null}
+                  {isActive ? <CheckCircle size={20} color={colors.brandGreen} /> : null}
                 </TouchableOpacity>
               );
             })}
             <TouchableOpacity
-              className="py-4 items-center mt-2"
-              onPress={() => setLanguageModalVisible(false)}
-            >
-              <Text
-                className="text-sm"
-                style={{ color: colors.textMuted }}
-              >
+              className="mt-2 items-center py-4"
+              onPress={() => setLanguageModalVisible(false)}>
+              <Text className="text-sm" style={{ color: colors.textMuted }}>
                 {t('common.cancel')}
               </Text>
             </TouchableOpacity>
@@ -484,49 +434,41 @@ export default function SettingsScreen() {
         visible={pinModalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setPinModalVisible(false)}
-      >
+        onRequestClose={() => setPinModalVisible(false)}>
         <View
           className="flex-1 items-center justify-center px-8"
-          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
-        >
+          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
           <View
-            className="w-full rounded-2xl p-6 gap-5"
-            style={{ backgroundColor: colors.surface }}
-          >
-            <Text
-              className="text-xl font-bold text-center"
-              style={{ color: colors.textPrimary }}
-            >
+            className="w-full gap-5 rounded-2xl p-6"
+            style={{ backgroundColor: colors.surface }}>
+            <Text className="text-center text-xl font-bold" style={{ color: colors.textPrimary }}>
               {pinStep === 'create' ? t('settings.setPin') : t('settings.confirmPin')}
             </Text>
-            <Text
-              className="text-sm text-center"
-              style={{ color: colors.textSecondary }}
-            >
+            <Text className="text-center text-sm" style={{ color: colors.textSecondary }}>
               {pinStep === 'create'
                 ? t('settings.setPinDescription')
                 : t('settings.confirmPinDescription')}
             </Text>
 
             {pinError ? (
-              <Text
-                className="text-sm text-center"
-                style={{ color: colors.error }}
-              >
+              <Text className="text-center text-sm" style={{ color: colors.error }}>
                 {pinError}
               </Text>
             ) : null}
 
             <TextInput
-              className="w-full text-center text-2xl tracking-widest rounded-xl px-4 py-3"
+              className="w-full rounded-xl px-4 py-3 text-center text-2xl tracking-widest"
               style={{
                 color: colors.textPrimary,
                 backgroundColor: colors.subtle,
                 borderWidth: 1,
                 borderColor: colors.borderSubtle,
               }}
-              placeholder={pinStep === 'confirm' ? t('settings.pinPlaceholderReenter') : t('settings.pinPlaceholderEnter')}
+              placeholder={
+                pinStep === 'confirm'
+                  ? t('settings.pinPlaceholderReenter')
+                  : t('settings.pinPlaceholderEnter')
+              }
               placeholderTextColor={colors.textMuted}
               value={pinStep === 'create' ? pinInput : pinConfirm}
               onChangeText={pinStep === 'create' ? setPinInput : setPinConfirm}
@@ -537,39 +479,26 @@ export default function SettingsScreen() {
             />
 
             <TouchableOpacity
-              className="w-full py-4 rounded-xl items-center justify-center"
+              className="w-full items-center justify-center rounded-xl py-4"
               style={{
                 backgroundColor: colors.primaryContainer,
-                opacity:
-                  (pinStep === 'create' ? pinInput : pinConfirm).length >= 4
-                    ? 1
-                    : 0.5,
+                opacity: (pinStep === 'create' ? pinInput : pinConfirm).length >= 4 ? 1 : 0.5,
               }}
               activeOpacity={0.8}
               onPress={handlePinSetupNext}
-              disabled={
-                (pinStep === 'create' ? pinInput : pinConfirm).length < 4
-              }
-            >
-              <Text
-                className="text-base font-bold"
-                style={{ color: colors.background }}
-              >
+              disabled={(pinStep === 'create' ? pinInput : pinConfirm).length < 4}>
+              <Text className="text-base font-bold" style={{ color: colors.background }}>
                 {pinStep === 'create' ? t('settings.pinNext') : t('settings.pinConfirmEnable')}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="py-2 items-center"
+              className="items-center py-2"
               onPress={() => {
                 setPinModalVisible(false);
                 setBiometricsEnabled(false);
-              }}
-            >
-              <Text
-                className="text-sm"
-                style={{ color: colors.textMuted }}
-              >
+              }}>
+              <Text className="text-sm" style={{ color: colors.textMuted }}>
                 {t('settings.pinCancel')}
               </Text>
             </TouchableOpacity>

@@ -26,12 +26,12 @@ function EventIndicator({ events }: { events: CalendarEventData[] }) {
   const unpaidCount = events.length - paidCount;
 
   return (
-    <View className="flex-row gap-0.5 mt-0.5">
+    <View className="mt-0.5 flex-row gap-0.5">
       {unpaidCount > 0 && (
-        <View className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.warning }} />
+        <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colors.warning }} />
       )}
       {paidCount > 0 && (
-        <View className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.success }} />
+        <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colors.success }} />
       )}
     </View>
   );
@@ -49,36 +49,28 @@ function DayCell({
   const hasEvents = day.events.length > 0;
 
   return (
-    <TouchableOpacity
-      className="flex-1 items-center py-1.5"
-      activeOpacity={0.6}
-      onPress={onPress}
-    >
+    <TouchableOpacity className="flex-1 items-center py-1.5" activeOpacity={0.6} onPress={onPress}>
       <View
-        className={`w-9 h-9 items-center justify-center rounded-full ${
-          isSelected ? '' : ''
-        }`}
+        className={`h-9 w-9 items-center justify-center rounded-full ${isSelected ? '' : ''}`}
         style={{
           backgroundColor: isSelected
             ? colors.brandGreen
             : day.isToday
-            ? colors.brandGreenDim
-            : 'transparent',
-        }}
-      >
+              ? colors.brandGreenDim
+              : 'transparent',
+        }}>
         <Text
           className="text-sm"
           style={{
             color: isSelected
               ? colors.ctaText
               : day.isToday
-              ? colors.brandGreen
-              : day.isCurrentMonth
-              ? colors.textPrimary
-              : colors.textFaint,
+                ? colors.brandGreen
+                : day.isCurrentMonth
+                  ? colors.textPrimary
+                  : colors.textFaint,
             fontWeight: isSelected || day.isToday ? '700' : '400',
-          }}
-        >
+          }}>
           {day.date.getDate()}
         </Text>
       </View>
@@ -87,32 +79,37 @@ function DayCell({
   );
 }
 
-function SelectedDayPanel({ day, t }: { day: CalendarDayData; t: (key: string, opts?: any) => string }) {
+function SelectedDayPanel({
+  day,
+  t,
+}: {
+  day: CalendarDayData;
+  t: (key: string, opts?: any) => string;
+}) {
   if (!day.events.length) {
     return (
       <View
-        className="rounded-2xl p-5 items-center"
-        style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
-      >
-          <Text className="text-sm" style={{ color: colors.textMuted }}>
-            {t('calendar.noPaymentsOnDay')}
-          </Text>
+        className="items-center rounded-2xl p-5"
+        style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
+        <Text className="text-sm" style={{ color: colors.textMuted }}>
+          {t('calendar.noPaymentsOnDay')}
+        </Text>
       </View>
     );
   }
 
   return (
     <View
-      className="rounded-2xl overflow-hidden"
-      style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
-    >
-      <View className="p-4 border-b" style={{ borderBottomColor: colors.border }}>
-          <Text className="text-sm font-semibold" style={{ color: colors.textSecondary }}>
-            {formatDate(day.date, 'long')}
-          </Text>
-          <Text className="text-xs" style={{ color: colors.textMuted }}>
-            {day.events.length} {day.events.length > 1 ? t('calendar.payments') : t('calendar.payment')}
-          </Text>
+      className="overflow-hidden rounded-2xl"
+      style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
+      <View className="border-b p-4" style={{ borderBottomColor: colors.border }}>
+        <Text className="text-sm font-semibold" style={{ color: colors.textSecondary }}>
+          {formatDate(day.date, 'long')}
+        </Text>
+        <Text className="text-xs" style={{ color: colors.textMuted }}>
+          {day.events.length}{' '}
+          {day.events.length > 1 ? t('calendar.payments') : t('calendar.payment')}
+        </Text>
       </View>
       {day.events.map((event, idx) => (
         <View
@@ -121,15 +118,13 @@ function SelectedDayPanel({ day, t }: { day: CalendarDayData; t: (key: string, o
           style={{
             borderBottomWidth: idx < day.events.length - 1 ? 1 : 0,
             borderBottomColor: colors.border,
-          }}
-        >
-          <View className="flex-row items-center gap-3 flex-1">
+          }}>
+          <View className="flex-1 flex-row items-center gap-3">
             <View
-              className="w-8 h-8 rounded-full items-center justify-center"
+              className="h-8 w-8 items-center justify-center rounded-full"
               style={{
                 backgroundColor: event.isPaid ? colors.successDim : colors.warningDim,
-              }}
-            >
+              }}>
               {event.isPaid ? (
                 <CheckCircle size={16} color={colors.success} />
               ) : (
@@ -147,8 +142,7 @@ function SelectedDayPanel({ day, t }: { day: CalendarDayData; t: (key: string, o
           </View>
           <Text
             className="text-xs font-semibold"
-            style={{ color: event.isPaid ? colors.success : colors.warning }}
-          >
+            style={{ color: event.isPaid ? colors.success : colors.warning }}>
             {event.isPaid ? t('calendar.eventPaid') : t('calendar.eventDue')}
           </Text>
         </View>
@@ -217,7 +211,12 @@ export default function CalendarScreen() {
           message={error ?? ''}
           iconColor={colors.error}
           iconBackgroundColor={colors.errorDim}
-          action={{ label: t('common.tryAgain'), onPress: () => { void refetch(); } }}
+          action={{
+            label: t('common.tryAgain'),
+            onPress: () => {
+              void refetch();
+            },
+          }}
         />
       </SafeAreaView>
     );
@@ -240,34 +239,38 @@ export default function CalendarScreen() {
   const totalPaid = allEvents.filter((e) => e.isPaid).length;
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
+      edges={['top', 'left', 'right']}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.brandGreen} />
-        }
-      >
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.brandGreen}
+          />
+        }>
         {/* Header */}
-        <View className="px-4 pt-4 pb-2 flex-row items-center justify-between">
+        <View className="flex-row items-center justify-between px-4 pb-2 pt-4">
           <Text className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
             {t('calendar.calendar')}
           </Text>
           <View className="flex-row gap-2">
             <TouchableOpacity
-              className="h-10 w-10 rounded-xl items-center justify-center"
+              className="h-10 w-10 items-center justify-center rounded-xl"
               style={{ backgroundColor: colors.subtle }}
               activeOpacity={0.7}
-              onPress={handleScheduleReminders}
-            >
+              onPress={handleScheduleReminders}>
               <Bell size={20} color={colors.textSecondary} />
             </TouchableOpacity>
             <TouchableOpacity
-              className="h-10 w-10 rounded-xl items-center justify-center"
+              className="h-10 w-10 items-center justify-center rounded-xl"
               style={{ backgroundColor: colors.subtle }}
               activeOpacity={0.7}
-              onPress={handleExport}
-            >
+              onPress={handleExport}>
               <CheckSquare size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
@@ -276,14 +279,12 @@ export default function CalendarScreen() {
         {/* Streak Card */}
         <View className="mx-4 mb-4">
           <View
-            className="rounded-2xl p-4 flex-row items-center justify-between"
-            style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
-          >
+            className="flex-row items-center justify-between rounded-2xl p-4"
+            style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
             <View className="flex-row items-center gap-3">
               <View
-                className="w-10 h-10 rounded-xl items-center justify-center"
-                style={{ backgroundColor: colors.brandGreenDim }}
-              >
+                className="h-10 w-10 items-center justify-center rounded-xl"
+                style={{ backgroundColor: colors.brandGreenDim }}>
                 <CheckCircle size={20} color={colors.brandGreen} />
               </View>
               <View>
@@ -302,11 +303,10 @@ export default function CalendarScreen() {
         </View>
 
         {/* Summary */}
-        <View className="flex-row gap-3 mx-4 mb-4">
+        <View className="mx-4 mb-4 flex-row gap-3">
           <View
-            className="flex-1 rounded-xl p-3 items-center"
-            style={{ backgroundColor: colors.warningDim }}
-          >
+            className="flex-1 items-center rounded-xl p-3"
+            style={{ backgroundColor: colors.warningDim }}>
             <Text className="text-xs" style={{ color: colors.warning }}>
               {t('calendar.due')}
             </Text>
@@ -315,9 +315,8 @@ export default function CalendarScreen() {
             </Text>
           </View>
           <View
-            className="flex-1 rounded-xl p-3 items-center"
-            style={{ backgroundColor: colors.successDim }}
-          >
+            className="flex-1 items-center rounded-xl p-3"
+            style={{ backgroundColor: colors.successDim }}>
             <Text className="text-xs" style={{ color: colors.success }}>
               {t('calendar.paid')}
             </Text>
@@ -330,16 +329,14 @@ export default function CalendarScreen() {
         {/* Calendar Widget */}
         <View
           className="mx-4 rounded-2xl p-4"
-          style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
-        >
+          style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
           {/* Month Navigation */}
-          <View className="flex-row items-center justify-between mb-4">
+          <View className="mb-4 flex-row items-center justify-between">
             <TouchableOpacity
-              className="h-10 w-10 rounded-xl items-center justify-center"
+              className="h-10 w-10 items-center justify-center rounded-xl"
               style={{ backgroundColor: colors.subtle }}
               activeOpacity={0.7}
-              onPress={goToPrevMonth}
-            >
+              onPress={goToPrevMonth}>
               <ChevronLeft size={20} color={colors.textPrimary} />
             </TouchableOpacity>
             <TouchableOpacity activeOpacity={0.7} onPress={goToToday}>
@@ -348,17 +345,16 @@ export default function CalendarScreen() {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="h-10 w-10 rounded-xl items-center justify-center"
+              className="h-10 w-10 items-center justify-center rounded-xl"
               style={{ backgroundColor: colors.subtle }}
               activeOpacity={0.7}
-              onPress={goToNextMonth}
-            >
+              onPress={goToNextMonth}>
               <ChevronRight size={20} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
 
           {/* Weekday Headers */}
-          <View className="flex-row mb-2">
+          <View className="mb-2 flex-row">
             {weekdayHeaders.map((day) => (
               <View key={day} className="flex-1 items-center">
                 <Text className="text-xs font-semibold" style={{ color: colors.textMuted }}>
@@ -370,10 +366,9 @@ export default function CalendarScreen() {
 
           {/* Day Grid */}
           {weeks.map((week, weekIdx) => (
-            <View key={weekIdx} className="flex-row mb-1">
+            <View key={weekIdx} className="mb-1 flex-row">
               {week.map((day, dayIdx) => {
-                const isSelected =
-                  selectedDay?.date.getTime() === day.date.getTime();
+                const isSelected = selectedDay?.date.getTime() === day.date.getTime();
                 return (
                   <DayCell
                     key={dayIdx}

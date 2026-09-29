@@ -66,7 +66,7 @@ describe('LoansStore — markInstallmentPaid idempotency', () => {
       useLoansStore.getState().markInstallmentPaid(
         'tx-1',
         'loan-1',
-        0, // first installment
+        0 // first installment
       );
 
       const state = useLoansStore.getState();
@@ -152,12 +152,12 @@ describe('LoansStore — markInstallmentPaid idempotency', () => {
       useLoansStore.getState().markInstallmentPaid('tx-1', 'loan-1', 0);
 
       // Verify AsyncStorage.setItem was called with the persisted state
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-        '@stepfi/loans-store',
-        expect.any(String),
-      );
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('@stepfi/loans-store', expect.any(String));
 
-      const savedData = JSON.parse((AsyncStorage.setItem as jest.Mock).mock.calls[0][1]);
+      // Each mutation triggers a persist write; assert against the latest
+      // snapshot, which reflects all accumulated whitelisted state.
+      const calls = (AsyncStorage.setItem as jest.Mock).mock.calls;
+      const savedData = JSON.parse(calls[calls.length - 1][1]);
 
       // Should persist these fields
       expect(savedData.state.loans).toHaveLength(1);

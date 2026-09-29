@@ -16,11 +16,7 @@ export function useRepayment(): UseRepaymentReturn {
     async (loanId: string, installmentIndex: number, amount: number) => {
       if (status !== 'idle') return;
 
-      const { unsignedXdr } = await loansService.repayInstallment(
-        loanId,
-        installmentIndex,
-        amount,
-      );
+      const { unsignedXdr } = await loansService.repayInstallment(loanId, installmentIndex, amount);
 
       const result = await execute(unsignedXdr);
 
@@ -39,7 +35,7 @@ export function useRepayment(): UseRepaymentReturn {
         useLoansStore.getState().setPendingTransactions(all);
       }
     },
-    [status, execute],
+    [status, execute]
   );
 
   return { status, txHash, error, execute, repay, reset };

@@ -45,8 +45,7 @@ const CustomToggle: React.FC<ToggleProps> = ({ value, onValueChange, accessibili
       activeOpacity={0.85}
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
-      accessibilityLabel={accessibilityLabel}
-    >
+      accessibilityLabel={accessibilityLabel}>
       <Animated.View
         style={{
           width: TRACK_W,
@@ -54,8 +53,7 @@ const CustomToggle: React.FC<ToggleProps> = ({ value, onValueChange, accessibili
           borderRadius: TRACK_H / 2,
           backgroundColor: trackBg,
           justifyContent: 'center',
-        }}
-      >
+        }}>
         <Animated.View
           style={{
             position: 'absolute',
@@ -107,31 +105,78 @@ const SECTIONS: SettingsSection[] = [
   {
     title: 'ACCOUNT',
     rows: [
-      { icon: 'person-outline', label: 'Profile', subtitle: 'Manage your personal information', type: 'link' },
+      {
+        icon: 'person-outline',
+        label: 'Profile',
+        subtitle: 'Manage your personal information',
+        type: 'link',
+      },
       { icon: 'mail-outline', label: 'Email', subtitle: 'Change your email address', type: 'link' },
-      { icon: 'call-outline', label: 'Phone Number', subtitle: 'Update your contact number', type: 'link' },
+      {
+        icon: 'call-outline',
+        label: 'Phone Number',
+        subtitle: 'Update your contact number',
+        type: 'link',
+      },
     ],
   },
   {
     title: 'PREFERENCES',
     rows: [
-      { icon: 'sunny-outline', label: 'Dark Mode', subtitle: 'Switch between light and dark theme', type: 'coming-soon' },
-      { icon: 'notifications-outline', label: 'Notifications', subtitle: 'Receive push notifications', type: 'toggle', toggleKey: 'notifications' },
-      { icon: 'finger-print-outline', label: 'Biometric Authentication', subtitle: 'Use fingerprint or face ID', type: 'coming-soon' },
+      {
+        icon: 'sunny-outline',
+        label: 'Dark Mode',
+        subtitle: 'Switch between light and dark theme',
+        type: 'coming-soon',
+      },
+      {
+        icon: 'notifications-outline',
+        label: 'Notifications',
+        subtitle: 'Receive push notifications',
+        type: 'toggle',
+        toggleKey: 'notifications',
+      },
+      {
+        icon: 'finger-print-outline',
+        label: 'Biometric Authentication',
+        subtitle: 'Use fingerprint or face ID',
+        type: 'coming-soon',
+      },
     ],
   },
   {
     title: 'PAYMENT',
     rows: [
-      { icon: 'card-outline', label: 'Payment Methods', subtitle: 'Manage your cards and accounts', type: 'link' },
-      { icon: 'lock-open-outline', label: 'Auto Pay', subtitle: 'Automatically pay your loans', type: 'toggle', toggleKey: 'autoPay' },
+      {
+        icon: 'card-outline',
+        label: 'Payment Methods',
+        subtitle: 'Manage your cards and accounts',
+        type: 'link',
+      },
+      {
+        icon: 'lock-open-outline',
+        label: 'Auto Pay',
+        subtitle: 'Automatically pay your loans',
+        type: 'toggle',
+        toggleKey: 'autoPay',
+      },
     ],
   },
   {
     title: 'SUPPORT',
     rows: [
-      { icon: 'help-circle-outline', label: 'Help & Support', subtitle: 'Get help with your account', type: 'link' },
-      { icon: 'shield-checkmark-outline', label: 'Privacy Policy', subtitle: 'Read our privacy policy', type: 'link' },
+      {
+        icon: 'help-circle-outline',
+        label: 'Help & Support',
+        subtitle: 'Get help with your account',
+        type: 'link',
+      },
+      {
+        icon: 'shield-checkmark-outline',
+        label: 'Privacy Policy',
+        subtitle: 'Read our privacy policy',
+        type: 'link',
+      },
     ],
   },
 ];
@@ -161,8 +206,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           flexDirection: 'row',
           alignItems: 'center',
           gap: 12,
-        }}
-      >
+        }}>
         <TouchableOpacity
           onPress={onBack}
           activeOpacity={0.7}
@@ -177,20 +221,16 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             justifyContent: 'center',
             borderWidth: 1,
             borderColor: colors.border,
-          }}
-        >
+          }}>
           <Ionicons name="chevron-back" size={20} color={colors.text} />
         </TouchableOpacity>
-        <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
-          Settings
-        </Text>
+        <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>Settings</Text>
       </View>
 
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 16 }}
-        showsVerticalScrollIndicator={false}
-      >
+        showsVerticalScrollIndicator={false}>
         {SECTIONS.map((section) => (
           <View key={section.title}>
             {/* Section header */}
@@ -202,8 +242,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                 letterSpacing: 1.2,
                 marginTop: 24,
                 marginBottom: 8,
-              }}
-            >
+              }}>
               {section.title}
             </Text>
 
@@ -218,8 +257,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                         alignItems: 'center',
                         paddingHorizontal: 16,
                         paddingVertical: 12,
-                      }}
-                    >
+                      }}>
                       {/* Grayed icon */}
                       <View
                         style={{
@@ -230,8 +268,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                           alignItems: 'center',
                           justifyContent: 'center',
                           marginRight: 14,
-                        }}
-                      >
+                        }}>
                         <Ionicons name={row.icon} size={20} color={colors.textMuted} />
                       </View>
 
@@ -252,8 +289,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                           borderRadius: 20,
                           paddingHorizontal: 10,
                           paddingVertical: 4,
-                        }}
-                      >
+                        }}>
                         <Text style={{ color: colors.cta, fontSize: 11, fontWeight: '600' }}>
                           Coming soon
                         </Text>
@@ -266,8 +302,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                         alignItems: 'center',
                         paddingHorizontal: 16,
                         paddingVertical: 12,
-                      }}
-                    >
+                      }}>
                       {/* Icon */}
                       <View
                         style={{
@@ -278,8 +313,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                           alignItems: 'center',
                           justifyContent: 'center',
                           marginRight: 14,
-                        }}
-                      >
+                        }}>
                         <Ionicons name={row.icon} size={20} color={colors.cta} />
                       </View>
 
@@ -310,8 +344,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                         paddingVertical: 12,
                       }}
                       accessibilityLabel={row.label}
-                      accessibilityRole="button"
-                    >
+                      accessibilityRole="button">
                       {/* Icon */}
                       <View
                         style={{
@@ -322,8 +355,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                           alignItems: 'center',
                           justifyContent: 'center',
                           marginRight: 14,
-                        }}
-                      >
+                        }}>
                         <Ionicons name={row.icon} size={20} color={colors.cta} />
                       </View>
 

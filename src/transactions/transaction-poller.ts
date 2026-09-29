@@ -77,17 +77,13 @@ async function pollOne(tx: {
 
         // Sync updated pending list into the store for live UI
         const updated = await pendingQueue.getPending();
-        useLoansStore.getState().setPendingTransactions(
-          await pendingQueue.getAll(),
-        );
+        useLoansStore.getState().setPendingTransactions(await pendingQueue.getAll());
 
         // Idempotent loan‑store update — pass txHash as idempotency key
         if (tx.targetLoanId && tx.targetInstallmentIndex !== undefined) {
-          useLoansStore.getState().markInstallmentPaid(
-            tx.txHash,
-            tx.targetLoanId,
-            tx.targetInstallmentIndex,
-          );
+          useLoansStore
+            .getState()
+            .markInstallmentPaid(tx.txHash, tx.targetLoanId, tx.targetInstallmentIndex);
         }
         break;
       }
@@ -99,9 +95,7 @@ async function pollOne(tx: {
           message: result.message,
         });
 
-        useLoansStore.getState().setPendingTransactions(
-          await pendingQueue.getAll(),
-        );
+        useLoansStore.getState().setPendingTransactions(await pendingQueue.getAll());
         break;
       }
 
@@ -111,9 +105,7 @@ async function pollOne(tx: {
           txHash: tx.txHash,
         });
 
-        useLoansStore.getState().setPendingTransactions(
-          await pendingQueue.getAll(),
-        );
+        useLoansStore.getState().setPendingTransactions(await pendingQueue.getAll());
         break;
       }
 
@@ -133,9 +125,7 @@ async function pollOne(tx: {
             retries: nextRetry,
           });
 
-          useLoansStore.getState().setPendingTransactions(
-            await pendingQueue.getAll(),
-          );
+          useLoansStore.getState().setPendingTransactions(await pendingQueue.getAll());
         }
         break;
       }
@@ -231,7 +221,7 @@ export async function reconcilePendingTxs(): Promise<void> {
 
   // Poll all in parallel for fast reconciliation, protected by per-tx locks
   const results = await Promise.allSettled(
-    pendings.map((tx) => withLock(tx.id, () => pollOne(tx))),
+    pendings.map((tx) => withLock(tx.id, () => pollOne(tx)))
   );
 
   const ok = results.filter((r) => r.status === 'fulfilled').length;

@@ -14,7 +14,7 @@ export const Header = ({ onNotificationsPress, onSettingsPress }: HeaderProps) =
     <View className="bg-white px-6 pb-4 pt-12">
       <View className="flex-row items-center justify-between">
         {/* Greetings */}
-        <Text className="text-xl font-semibold text-text">Good evening, Josué</Text>
+        <Text className="text-text text-xl font-semibold">Good evening, Josué</Text>
 
         {/* Right icon */}
         <View className="flex-row items-center gap-4">
@@ -24,8 +24,7 @@ export const Header = ({ onNotificationsPress, onSettingsPress }: HeaderProps) =
             className="h-10 w-10 items-center justify-center"
             onPress={onSettingsPress}
             accessibilityLabel="Open Settings"
-            accessibilityRole="button"
-          >
+            accessibilityRole="button">
             <Ionicons name="settings-outline" size={24} color={colors.text} />
           </TouchableOpacity>
 
@@ -33,8 +32,7 @@ export const Header = ({ onNotificationsPress, onSettingsPress }: HeaderProps) =
           <TouchableOpacity
             activeOpacity={0.7}
             className="h-10 w-10 items-center justify-center"
-            onPress={onNotificationsPress}
-          >
+            onPress={onNotificationsPress}>
             <Ionicons name="notifications-outline" size={24} color={colors.text} />
           </TouchableOpacity>
 

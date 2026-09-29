@@ -51,7 +51,10 @@ function useAuthGuard() {
     } else if (isAuthenticated) {
       if (role === 'learner' && !onboardingComplete && !isOnboarding) {
         router.replace('/(auth)/onboarding');
-      } else if ((onboardingComplete || role === 'sponsor' || role === null) && (inAuthGroup || isOnboarding)) {
+      } else if (
+        (onboardingComplete || role === 'sponsor' || role === null) &&
+        (inAuthGroup || isOnboarding)
+      ) {
         router.replace('/(tabs)');
       }
     }
@@ -75,6 +78,7 @@ function useSentryUserContext() {
 
 function RootLayout() {
   const [i18nReady, setI18nReady] = useState(false);
+  const [securityHydrated, setSecurityHydrated] = useState(false);
   const hydrate = useAuthStore((s) => s.hydrate);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -103,6 +107,10 @@ function RootLayout() {
   useEffect(() => {
     void hydrate();
     void useUserStore.getState().hydrate();
+    useSecurityStore
+      .getState()
+      .hydrate()
+      .finally(() => setSecurityHydrated(true));
     initPromise.then(() => setI18nReady(true));
   }, [hydrate]);
 
@@ -110,6 +118,8 @@ function RootLayout() {
   useSentryUserContext();
 
   useEffect(() => {
+    if (!securityHydrated) return;
+
     if (!isLoading && isAuthenticated && !biometricCheckDone) {
       useSecurityStore.getState().markBiometricCheckDone();
       biometricService.isBiometricsEnabled().then((enabled) => {
@@ -122,7 +132,7 @@ function RootLayout() {
     if (!isAuthenticated) {
       useSecurityStore.getState().reset();
     }
-  }, [isLoading, isAuthenticated, biometricCheckDone]);
+  }, [isLoading, isAuthenticated, biometricCheckDone, securityHydrated]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
@@ -130,10 +140,7 @@ function RootLayout() {
 
       if (state === 'active') {
         const elapsed = Date.now() - lastActiveRef.current;
-        if (
-          elapsed >= IDLE_TIMEOUT_MS &&
-          useAuthStore.getState().isAuthenticated
-        ) {
+        if (elapsed >= IDLE_TIMEOUT_MS && useAuthStore.getState().isAuthenticated) {
           useSecurityStore.getState().lock();
         }
         if (!useSecurityStore.getState().isLocked) {
@@ -203,7 +210,7 @@ function RootLayout() {
     return () => unsubscribe();
   }, []);
 
-  if (isLoading || !i18nReady) {
+  if (isLoading || !i18nReady || !securityHydrated) {
     return null;
   }
 
@@ -219,8 +226,7 @@ function RootLayout() {
               if (!useSecurityStore.getState().isLocked) {
                 startIdleTimer();
               }
-            }}
-          >
+            }}>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="(tabs)" />

@@ -49,7 +49,7 @@ const InvestScreen = () => {
           showsVerticalScrollIndicator={false}>
           <View className="px-6 pb-6 pt-6">
             {/* Page Title */}
-            <Text className="mb-6 text-2xl font-bold text-text">Invest in StepFi</Text>
+            <Text className="text-text mb-6 text-2xl font-bold">Invest in StepFi</Text>
 
             {/* Investment Card */}
             <View
@@ -57,7 +57,7 @@ const InvestScreen = () => {
               accessibilityRole="summary"
               accessibilityLabel="Your investment summary">
               <View className="mb-4 flex-row items-center gap-2">
-                <View className="h-10 w-10 items-center justify-center rounded-full bg-purpleSoft">
+                <View className="bg-purpleSoft h-10 w-10 items-center justify-center rounded-full">
                   <Ionicons name="trending-up" size={20} color={colors.purple} />
                 </View>
                 <Text className="text-base font-medium text-textSecondary">Your Investment</Text>
@@ -65,13 +65,13 @@ const InvestScreen = () => {
 
               {/* Total Invested */}
               <View className="mb-4">
-                <Text className="mb-1 text-sm text-textSubtle">Total Invested</Text>
-                <Text className="text-5xl font-bold text-textStrong">$1,250.00</Text>
+                <Text className="text-textSubtle mb-1 text-sm">Total Invested</Text>
+                <Text className="text-textStrong text-5xl font-bold">$1,250.00</Text>
               </View>
 
               {/* Earnings */}
               <View className="mb-2 flex-row items-center justify-between">
-                <Text className="text-sm text-textSubtle">Earnings</Text>
+                <Text className="text-textSubtle text-sm">Earnings</Text>
                 <Text className="text-base font-semibold text-success">+$42.30</Text>
               </View>
 
@@ -81,11 +81,11 @@ const InvestScreen = () => {
               {/* APY and Return Rate Row */}
               <View className="flex-row items-start justify-between">
                 <View className="flex-1">
-                  <Text className="mb-1 text-sm text-textSubtle">Estimated APY</Text>
-                  <Text className="text-3xl font-bold text-textStrong">5.2%</Text>
+                  <Text className="text-textSubtle mb-1 text-sm">Estimated APY</Text>
+                  <Text className="text-textStrong text-3xl font-bold">5.2%</Text>
                 </View>
                 <View className="items-end">
-                  <Text className="mb-1 text-sm text-textSubtle">Return Rate</Text>
+                  <Text className="text-textSubtle mb-1 text-sm">Return Rate</Text>
                   <Text className="text-base font-semibold text-success">+3.4%</Text>
                 </View>
               </View>
@@ -97,7 +97,7 @@ const InvestScreen = () => {
               accessibilityRole="summary"
               accessibilityLabel="Fund overview information">
               <View className="mb-4 flex-row items-center gap-2">
-                <View className="h-10 w-10 items-center justify-center rounded-full bg-successSoft">
+                <View className="bg-successSoft h-10 w-10 items-center justify-center rounded-full">
                   <Text className="text-xl font-bold text-success">$</Text>
                 </View>
                 <Text className="text-base font-medium text-textSecondary">Fund Overview</Text>
@@ -105,39 +105,39 @@ const InvestScreen = () => {
 
               {/* Pool Size */}
               <View className="mb-3 flex-row items-center justify-between">
-                <Text className="text-sm text-textSubtle">Pool Size</Text>
-                <Text className="text-base font-semibold text-textStrong">$48,320</Text>
+                <Text className="text-textSubtle text-sm">Pool Size</Text>
+                <Text className="text-textStrong text-base font-semibold">$48,320</Text>
               </View>
 
               {/* Active Loans */}
               <View className="mb-3 flex-row items-center justify-between">
-                <Text className="text-sm text-textSubtle">Active Loans</Text>
-                <Text className="text-base font-semibold text-textStrong">36</Text>
+                <Text className="text-textSubtle text-sm">Active Loans</Text>
+                <Text className="text-textStrong text-base font-semibold">36</Text>
               </View>
 
               {/* Risk Level */}
               <View className="mb-3 flex-row items-center justify-between">
-                <Text className="text-sm text-textSubtle">Risk Level</Text>
-                <View className="rounded-full bg-successSoft px-3 py-1">
+                <Text className="text-textSubtle text-sm">Risk Level</Text>
+                <View className="bg-successSoft rounded-full px-3 py-1">
                   <Text className="text-xs font-semibold text-success">Low</Text>
                 </View>
               </View>
 
               {/* Disclaimer Text */}
-              <Text className="mt-1 text-xs text-textSubtle">
+              <Text className="text-textSubtle mt-1 text-xs">
                 Returns depend on borrower behavior
               </Text>
             </View>
 
             {/* Deposit Card */}
             <View className="mb-4 rounded-2xl bg-white p-6 shadow-sm">
-              <Text className="mb-4 text-xl font-bold text-textStrong">Deposit Funds</Text>
+              <Text className="text-textStrong mb-4 text-xl font-bold">Deposit Funds</Text>
 
               {/* Amount Input Field */}
               <View className="mb-4">
-                <Text className="mb-2 text-sm text-textSubtle">Amount to invest</Text>
+                <Text className="text-textSubtle mb-2 text-sm">Amount to invest</Text>
                 <TextInput
-                  className="mb-2 text-5xl font-bold text-textStrong"
+                  className="text-textStrong mb-2 text-5xl font-bold"
                   keyboardType="numeric"
                   value={depositAmount ? `$${depositAmount}` : ''}
                   onChangeText={handleAmountChange}
@@ -151,7 +151,7 @@ const InvestScreen = () => {
                   accessibilityLabel="Amount to invest input field"
                   accessibilityHint="Enter the amount you want to invest, minimum $10"
                 />
-                <Text className="text-xs text-textSubtle">Minimum deposit $10</Text>
+                <Text className="text-textSubtle text-xs">Minimum deposit $10</Text>
               </View>
 
               {/* Transaction Feedback */}
@@ -160,12 +160,8 @@ const InvestScreen = () => {
                   <View className="flex-row items-start gap-2">
                     <Ionicons name="alert-circle" size={18} color="#DC2626" />
                     <View className="flex-1">
-                      <Text className="text-sm font-semibold text-red-700">
-                        Transaction failed
-                      </Text>
-                      <Text className="text-xs text-red-600 mt-1">
-                        {transactionError.message}
-                      </Text>
+                      <Text className="text-sm font-semibold text-red-700">Transaction failed</Text>
+                      <Text className="mt-1 text-xs text-red-600">{transactionError.message}</Text>
                       <TouchableOpacity onPress={resetTransaction} className="mt-2">
                         <Text className="text-xs font-semibold text-red-700 underline">
                           Dismiss
@@ -184,7 +180,7 @@ const InvestScreen = () => {
                       <Text className="text-sm font-semibold text-green-700">
                         Deposit successful
                       </Text>
-                      <Text className="text-xs text-green-600 mt-1 font-mono">
+                      <Text className="mt-1 font-mono text-xs text-green-600">
                         TX: {transactionHash.slice(0, 16)}...
                       </Text>
                       <TouchableOpacity onPress={resetTransaction} className="mt-2">
@@ -210,9 +206,7 @@ const InvestScreen = () => {
                 {isProcessing ? (
                   <View className="flex-row items-center gap-2">
                     <ActivityIndicator size="small" color="#FFFFFF" />
-                    <Text className="text-base font-semibold text-white">
-                      Processing...
-                    </Text>
+                    <Text className="text-base font-semibold text-white">Processing...</Text>
                   </View>
                 ) : (
                   <Text
@@ -227,10 +221,10 @@ const InvestScreen = () => {
 
             {/* Info Box */}
             <View
-              className="flex-row items-start rounded-2xl bg-infoSoft p-4"
+              className="bg-infoSoft flex-row items-start rounded-2xl p-4"
               accessibilityRole="text"
               accessibilityLabel="Important investment information">
-              <View className="mr-3 mt-0.5 h-6 w-6 items-center justify-center rounded-full bg-info">
+              <View className="bg-info mr-3 mt-0.5 h-6 w-6 items-center justify-center rounded-full">
                 <Ionicons name="information" size={14} color={colors.white} />
               </View>
               <Text className="flex-1 text-sm text-textSecondary">

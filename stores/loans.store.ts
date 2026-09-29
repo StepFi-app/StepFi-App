@@ -29,11 +29,7 @@ interface LoansState {
    * Idempotently mark an installment as paid.  If `txHash` has already been
    * processed this is a no‑op, preventing double‑counting on reconnect.
    */
-  markInstallmentPaid: (
-    txHash: string,
-    loanId: string,
-    installmentIndex: number,
-  ) => void;
+  markInstallmentPaid: (txHash: string, loanId: string, installmentIndex: number) => void;
 
   // ─── Pending transaction sync ──────────────────────────────────────────
   pendingTransactions: PendingTransaction[];
@@ -69,8 +65,7 @@ export const useLoansStore = create<LoansState>()(
 
       setLoading: (isLoading) => set({ isLoading }),
 
-      saveSimulation: (simulatedAmount, simulatedTerm) =>
-        set({ simulatedAmount, simulatedTerm }),
+      saveSimulation: (simulatedAmount, simulatedTerm) => set({ simulatedAmount, simulatedTerm }),
 
       markInstallmentPaid: (txHash, loanId, installmentIndex) => {
         const state = get();
@@ -130,6 +125,6 @@ export const useLoansStore = create<LoansState>()(
         processedTxHashes: state.processedTxHashes,
         pendingTransactions: state.pendingTransactions,
       }),
-    },
-  ),
+    }
+  )
 );

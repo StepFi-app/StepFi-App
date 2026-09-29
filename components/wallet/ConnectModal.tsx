@@ -23,14 +23,9 @@ export function ConnectModal() {
   const isSigning = useWalletStore((s) => s.isSigning);
   const clearError = useWalletStore((s) => s.clearError);
   const disconnect = useWalletStore((s) => s.disconnect);
-  const completeLobstrConnection = useWalletStore(
-    (s) => s.completeLobstrConnection
-  );
+  const completeLobstrConnection = useWalletStore((s) => s.completeLobstrConnection);
 
-  const isModalVisible =
-    pairingUri !== null ||
-    (isConnecting && !!pairingUri) ||
-    error !== null;
+  const isModalVisible = pairingUri !== null || (isConnecting && !!pairingUri) || error !== null;
 
   useEffect(() => {
     if (pairingUri && !isConnected && !error) {
@@ -68,58 +63,44 @@ export function ConnectModal() {
       visible={isModalVisible || isConnected}
       transparent
       animationType="fade"
-      onRequestClose={handleClose}
-    >
+      onRequestClose={handleClose}>
       <View
         className="flex-1 items-center justify-center px-6"
-        style={{ backgroundColor: 'rgba(8, 15, 26, 0.92)' }}
-      >
+        style={{ backgroundColor: 'rgba(8, 15, 26, 0.92)' }}>
         <View
-          className="w-full rounded-3xl p-6 items-center gap-5"
+          className="w-full items-center gap-5 rounded-3xl p-6"
           style={{
             backgroundColor: colors.elevated,
             borderWidth: 1,
             borderColor: colors.border,
-          }}
-        >
-          <View className="flex-row items-center justify-between w-full">
+          }}>
+          <View className="w-full flex-row items-center justify-between">
             <View className="flex-row items-center gap-2">
               <Smartphone size={20} color={colors.brandGreen} />
-              <Text
-                className="text-lg font-semibold"
-                style={{ color: colors.textPrimary }}
-              >
+              <Text className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
                 Connect Lobstr
               </Text>
             </View>
             <TouchableOpacity
               onPress={handleClose}
-              className="h-8 w-8 rounded-full items-center justify-center"
+              className="h-8 w-8 items-center justify-center rounded-full"
               style={{ backgroundColor: colors.subtle }}
-              disabled={isSigning}
-            >
+              disabled={isSigning}>
               <X size={16} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
           {error && (
             <View
-              className="w-full rounded-xl p-4 flex-row items-start gap-3"
-              style={{ backgroundColor: colors.errorDim }}
-            >
+              className="w-full flex-row items-start gap-3 rounded-xl p-4"
+              style={{ backgroundColor: colors.errorDim }}>
               <AlertCircle size={18} color={colors.error} />
               <View className="flex-1 gap-2">
                 <Text className="text-sm" style={{ color: colors.error }}>
                   {error}
                 </Text>
-                <TouchableOpacity
-                  onPress={handleClose}
-                  className="self-start"
-                >
-                  <Text
-                    className="text-sm font-medium"
-                    style={{ color: colors.error }}
-                  >
+                <TouchableOpacity onPress={handleClose} className="self-start">
+                  <Text className="text-sm font-medium" style={{ color: colors.error }}>
                     Try again
                   </Text>
                 </TouchableOpacity>
@@ -130,15 +111,11 @@ export function ConnectModal() {
           {isConnected && !error && (
             <View className="items-center gap-4 py-6">
               <View
-                className="h-16 w-16 rounded-full items-center justify-center"
-                style={{ backgroundColor: colors.successDim }}
-              >
+                className="h-16 w-16 items-center justify-center rounded-full"
+                style={{ backgroundColor: colors.successDim }}>
                 <CheckCircle size={28} color={colors.success} />
               </View>
-              <Text
-                className="text-base font-semibold"
-                style={{ color: colors.textPrimary }}
-              >
+              <Text className="text-base font-semibold" style={{ color: colors.textPrimary }}>
                 Lobstr connected successfully!
               </Text>
             </View>
@@ -147,15 +124,11 @@ export function ConnectModal() {
           {isSigning && !error && (
             <View className="items-center gap-4 py-6">
               <View
-                className="h-16 w-16 rounded-2xl items-center justify-center"
-                style={{ backgroundColor: colors.brandGreenDim }}
-              >
+                className="h-16 w-16 items-center justify-center rounded-2xl"
+                style={{ backgroundColor: colors.brandGreenDim }}>
                 <Loader size={28} color={colors.brandGreen} />
               </View>
-              <Text
-                className="text-base text-center"
-                style={{ color: colors.textSecondary }}
-              >
+              <Text className="text-center text-base" style={{ color: colors.textSecondary }}>
                 Waiting for Lobstr to approve the connection...
               </Text>
             </View>
@@ -163,36 +136,21 @@ export function ConnectModal() {
 
           {pairingUri && !isConnected && !error && !isSigning && (
             <>
-              <View
-                className="rounded-2xl p-4"
-                style={{ backgroundColor: '#FFFFFF' }}
-              >
-                <QRCode
-                  value={pairingUri}
-                  size={240}
-                  backgroundColor="#FFFFFF"
-                  color="#000000"
-                />
+              <View className="rounded-2xl p-4" style={{ backgroundColor: '#FFFFFF' }}>
+                <QRCode value={pairingUri} size={240} backgroundColor="#FFFFFF" color="#000000" />
               </View>
 
-              <Text
-                className="text-sm text-center"
-                style={{ color: colors.textSecondary }}
-              >
+              <Text className="text-center text-sm" style={{ color: colors.textSecondary }}>
                 Scan this QR code with the Lobstr app on your mobile device
               </Text>
 
               <TouchableOpacity
-                className="w-full h-12 rounded-2xl flex-row items-center justify-center gap-2"
+                className="h-12 w-full flex-row items-center justify-center gap-2 rounded-2xl"
                 style={{ backgroundColor: colors.brandGreen }}
                 activeOpacity={0.8}
-                onPress={handleOpenLobstr}
-              >
+                onPress={handleOpenLobstr}>
                 <ExternalLink size={18} color={colors.ctaText} />
-                <Text
-                  className="text-base font-semibold"
-                  style={{ color: colors.ctaText }}
-                >
+                <Text className="text-base font-semibold" style={{ color: colors.ctaText }}>
                   Open Lobstr App
                 </Text>
               </TouchableOpacity>
@@ -202,32 +160,22 @@ export function ConnectModal() {
           {!pairingUri && !isConnected && !error && (
             <View className="items-center gap-3 py-6">
               <View
-                className="h-16 w-16 rounded-2xl items-center justify-center"
-                style={{ backgroundColor: colors.brandGreenDim }}
-              >
+                className="h-16 w-16 items-center justify-center rounded-2xl"
+                style={{ backgroundColor: colors.brandGreenDim }}>
                 <QrCode size={28} color={colors.brandGreen} />
               </View>
-              <Text
-                className="text-base text-center"
-                style={{ color: colors.textSecondary }}
-              >
+              <Text className="text-center text-base" style={{ color: colors.textSecondary }}>
                 Generating connection QR code...
               </Text>
             </View>
           )}
 
-          <View
-            className="w-full rounded-xl p-3"
-            style={{ backgroundColor: colors.warningDim }}
-          >
-            <Text className="text-xs text-center" style={{ color: colors.warning }}>
+          <View className="w-full rounded-xl p-3" style={{ backgroundColor: colors.warningDim }}>
+            <Text className="text-center text-xs" style={{ color: colors.warning }}>
               New to Stellar wallets?{' '}
               <Text
                 className="underline"
-                onPress={() =>
-                  Linking.openURL('https://stellar.org/learn/stellar-wallets')
-                }
-              >
+                onPress={() => Linking.openURL('https://stellar.org/learn/stellar-wallets')}>
                 Learn more
               </Text>
             </Text>

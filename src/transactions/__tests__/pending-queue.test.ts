@@ -61,10 +61,7 @@ describe('pendingQueue', () => {
       expect(entry.status).toBe('pending');
       expect(entry.retryCount).toBe(0);
       expect(mockSetItem).toHaveBeenCalledTimes(1);
-      expect(mockSetItem).toHaveBeenCalledWith(
-        QUEUE_KEY,
-        expect.any(String),
-      );
+      expect(mockSetItem).toHaveBeenCalledWith(QUEUE_KEY, expect.any(String));
     });
 
     it('appends to existing queue entries', async () => {
@@ -85,7 +82,7 @@ describe('pendingQueue', () => {
 
   describe('updateStatus', () => {
     it('updates status, retryCount, and lastPolledAt for an existing entry', async () => {
-      const entry = createMockQueue({ id: 'tx-1' });
+      const entry = createMockQueue({ id: 'tx-1', updatedAt: 1 });
       mockGetItem.mockResolvedValue(JSON.stringify([entry]));
 
       const result = await pendingQueue.updateStatus('tx-1', 'confirmed', undefined, 5000);
@@ -115,10 +112,7 @@ describe('pendingQueue', () => {
 
   describe('remove', () => {
     it('removes an entry by id', async () => {
-      const entries = [
-        createMockQueue({ id: 'tx-1' }),
-        createMockQueue({ id: 'tx-2' }),
-      ];
+      const entries = [createMockQueue({ id: 'tx-1' }), createMockQueue({ id: 'tx-2' })];
       mockGetItem.mockResolvedValue(JSON.stringify(entries));
 
       await pendingQueue.remove('tx-1');

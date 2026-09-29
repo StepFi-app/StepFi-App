@@ -21,7 +21,7 @@ export class TransactionError extends Error {
   constructor(
     public readonly code: TransactionErrorCode,
     message: string,
-    public readonly originalError?: unknown,
+    public readonly originalError?: unknown
   ) {
     super(message);
     this.name = 'TransactionError';
@@ -35,11 +35,7 @@ export interface TransactionResult {
 
 // ─── Pending Transaction Tracking ────────────────────────────────────────────
 
-export type PendingTransactionStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'failed'
-  | 'expired';
+export type PendingTransactionStatus = 'pending' | 'confirmed' | 'failed' | 'expired';
 
 export type PendingTransactionType =
   | 'LOAN_CREATION'

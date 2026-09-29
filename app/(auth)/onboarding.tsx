@@ -112,16 +112,12 @@ export default function OnboardingScreen() {
       icon: CheckCircle2,
       render: () => (
         <View className="items-center justify-center py-8">
-          <View 
-            className="w-20 h-20 rounded-full items-center justify-center mb-4"
-            style={{ backgroundColor: colors.brandGreenDim }}
-          >
+          <View
+            className="mb-4 h-20 w-20 items-center justify-center rounded-full"
+            style={{ backgroundColor: colors.brandGreenDim }}>
             <CheckCircle2 size={40} color={colors.brandGreen} />
           </View>
-          <Text 
-            className="text-center text-[16px]"
-            style={{ color: colors.textSecondary }}
-          >
+          <Text className="text-center text-[16px]" style={{ color: colors.textSecondary }}>
             {t('onboarding.step4Subtitle')}
           </Text>
         </View>
@@ -133,15 +129,13 @@ export default function OnboardingScreen() {
     <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 h-16 w-full z-50">
+        <View className="z-50 h-16 w-full flex-row items-center justify-between px-4">
           <TouchableOpacity
             onPress={currentStep === 0 ? () => router.back() : prevStep}
             activeOpacity={0.7}
-            className="flex items-center justify-center w-10 h-10 rounded-full"
-          >
+            className="flex h-10 w-10 items-center justify-center rounded-full">
             <ChevronLeft size={24} color={colors.textPrimary} />
           </TouchableOpacity>
 
@@ -149,7 +143,7 @@ export default function OnboardingScreen() {
             {[0, 1, 2, 3].map((idx) => (
               <View
                 key={idx}
-                className="w-12 h-1 rounded-full"
+                className="h-1 w-12 rounded-full"
                 style={{
                   backgroundColor: idx <= currentStep ? colors.primary : colors.subtle,
                 }}
@@ -170,18 +164,18 @@ export default function OnboardingScreen() {
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={{ width }} className="px-4 pt-8">
-              <ScrollView 
+              <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 100 }}
-              >
+                contentContainerStyle={{ paddingBottom: 100 }}>
                 <View className="mb-8">
-                  <View 
-                    className="w-12 h-12 rounded-xl items-center justify-center mb-4"
-                    style={{ backgroundColor: colors.brandBlueDim }}
-                  >
+                  <View
+                    className="mb-4 h-12 w-12 items-center justify-center rounded-xl"
+                    style={{ backgroundColor: colors.brandBlueDim }}>
                     <item.icon size={24} color={colors.brandBlue} />
                   </View>
-                  <Text className="text-[32px] font-bold mb-2" style={{ color: colors.textPrimary }}>
+                  <Text
+                    className="mb-2 text-[32px] font-bold"
+                    style={{ color: colors.textPrimary }}>
                     {item.title}
                   </Text>
                   <Text className="text-[16px]" style={{ color: colors.textSecondary }}>
@@ -195,14 +189,13 @@ export default function OnboardingScreen() {
         />
 
         {/* Bottom Button */}
-        <View 
+        <View
           className="absolute bottom-0 left-0 w-full px-4 py-6"
-          style={{ 
+          style={{
             backgroundColor: `${colors.background}E6`,
             borderTopWidth: 1,
             borderTopColor: colors.borderSubtle,
-          }}
-        >
+          }}>
           <Button
             label={currentStep === 3 ? t('onboarding.finish') : t('common.next')}
             onPress={handleNext}
