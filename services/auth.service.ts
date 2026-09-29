@@ -1,5 +1,6 @@
 import api from './api';
 import { addBreadcrumb, captureServiceError } from './sentry';
+import { ApiClientError, ApiErrorCode } from '../types/errors';
 
 export interface NonceResponse {
   nonce: string;
@@ -21,7 +22,14 @@ export const authService = {
       return res.data;
     } catch (error) {
       captureServiceError('auth', 'getNonce', error);
-      throw error;
+      // Re-throw as ApiClientError if it isn't already
+      if (error instanceof ApiClientError) throw error;
+      throw new ApiClientError({
+        code: ApiErrorCode.NETWORK_ERROR,
+        message: 'Failed to get authentication nonce',
+        userMessage: 'Could not connect to the authentication server. Please try again.',
+        cause: error,
+      });
     }
   },
 
@@ -33,7 +41,13 @@ export const authService = {
       return res.data;
     } catch (error) {
       captureServiceError('auth', 'verify', error);
-      throw error;
+      if (error instanceof ApiClientError) throw error;
+      throw new ApiClientError({
+        code: ApiErrorCode.NETWORK_ERROR,
+        message: 'Failed to verify wallet signature',
+        userMessage: 'Could not verify your wallet signature. Please try again.',
+        cause: error,
+      });
     }
   },
 
@@ -45,7 +59,13 @@ export const authService = {
       return res.data;
     } catch (error) {
       captureServiceError('auth', 'refresh', error);
-      throw error;
+      if (error instanceof ApiClientError) throw error;
+      throw new ApiClientError({
+        code: ApiErrorCode.NETWORK_ERROR,
+        message: 'Failed to refresh auth tokens',
+        userMessage: 'Could not refresh your session. Please sign in again.',
+        cause: error,
+      });
     }
   },
 };
